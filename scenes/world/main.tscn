@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://05qo6kbyp5vk"]
 
-[ext_resource type="PackedScene" uid="uid://bxgldsmwgu3il" path="res://rostam.tscn" id="1_f3sb7"]
+[ext_resource type="PackedScene" uid="uid://bxgldsmwgu3il" path="res://scenes/player/rostam.tscn" id="1_f3sb7"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_fj7yv"]
 

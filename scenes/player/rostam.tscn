@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bxgldsmwgu3il"]
 
-[ext_resource type="Script" uid="uid://dp27qn3f7m7hv" path="res://rostam.gd" id="1_wp8i7"]
+[ext_resource type="Script" uid="uid://dp27qn3f7m7hv" path="res://scripts/player/rostam.gd" id="1_wp8i7"]
 [ext_resource type="Texture2D" uid="uid://c6ka1gjerfvw2" path="res://icon.svg" id="2_qemv8"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_grif0"]

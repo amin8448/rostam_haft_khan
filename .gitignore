@@ -1,4 +1,8 @@
+# Godot 4+ specific ignores
 .godot/
-*.import
+/android/
+
+# .import files are NOT ignored: they carry the resource UID and must match on both machines.
+
 *.tmp
 export_presets.cfg
