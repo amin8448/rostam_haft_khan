@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/khan1_01_marsh.tscn" id="2_room"]
 [ext_resource type="PackedScene" path="res://scenes/player/rostam.tscn" id="3_rostam"]
+[ext_resource type="Script" path="res://scripts/world/game_camera.gd" id="4_camera"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -11,4 +12,5 @@ script = ExtResource("1_main")
 
 [node name="Rostam" parent="." instance=ExtResource("3_rostam")]
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("4_camera")
