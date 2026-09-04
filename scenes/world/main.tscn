@@ -1,14 +1,14 @@
-[gd_scene format=3 uid="uid://05qo6kbyp5vk"]
+[gd_scene load_steps=4 format=3]
 
-[ext_resource type="PackedScene" uid="uid://bxgldsmwgu3il" path="res://scenes/player/rostam.tscn" id="1_f3sb7"]
+[ext_resource type="Script" path="res://scripts/world/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/khan1_01_marsh.tscn" id="2_room"]
+[ext_resource type="PackedScene" path="res://scenes/player/rostam.tscn" id="3_rostam"]
 
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_fj7yv"]
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
 
-[node name="World" type="Node2D" unique_id=781034851]
+[node name="Room" parent="." instance=ExtResource("2_room")]
 
-[node name="Floor" type="StaticBody2D" parent="." unique_id=363103927]
+[node name="Rostam" parent="." instance=ExtResource("3_rostam")]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=1322865406]
-shape = SubResource("WorldBoundaryShape2D_fj7yv")
-
-[node name="Rostam" parent="." unique_id=1487239279 instance=ExtResource("1_f3sb7")]
+[node name="Camera2D" type="Camera2D" parent="."]
