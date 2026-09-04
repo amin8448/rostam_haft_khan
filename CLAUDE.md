@@ -16,11 +16,11 @@ scope, controls and feel.
 - Renderer: GL Compatibility (already set in project.godot). Keep it.
 - The developer works on two machines (Ubuntu laptop, Windows desktop) and syncs through
   GitHub. Never write machine-specific paths or settings into the project.
-- Godot is not guaranteed to be on PATH in your shell. If it is, validate scripts with
-  `godot --headless --path . --check-only` (or `godot --headless --path . --quit` to catch
-  scene load errors). If it is not, say so and do not pretend the project was validated.
-- You cannot run or see the game. Playtesting is done by the developer. Every session ends
-  with a "How to test" section (see Workflow).
+- Godot is expected on PATH as `godot` (the console build). If it is not, say so and stop
+  claiming anything is validated. Never write the path to the Godot binary into the project.
+- You cannot see the game. Playtesting is done by the developer. What you can do is drive
+  it headless and measure it (see Validation and Tests). Every session ends with a "How to
+  test" section (see Workflow).
 
 ## Project layout
 
@@ -39,6 +39,7 @@ scenes/
   world/             main.tscn, room manager, transitions
 scripts/             mirrors scenes/ (scripts/player/rostam.gd etc.)
 autoload/            singletons (game_state.gd, room_manager.gd)
+tests/               headless simulation scripts, committed (see Tests)
 assets/
   placeholder/       colored shapes and simple tilesets only
   audio/
@@ -66,6 +67,36 @@ Keep a script next to its scene in the mirrored folder. One scene, one script.
 - Never edit anything under `.godot/`. It is generated and gitignored.
 - Comments explain why, not what. No decorative comments.
 
+## Validation
+
+Run from the repository root, in this order, before every commit that touches scripts,
+scenes or assets:
+
+1. `godot --headless --path . --import` rebuilds `.godot/`, writes `.import` sidecars,
+   registers `class_name` globals and reports parse errors. Always first: without it a new
+   texture has no loader and a new `class_name` does not resolve.
+2. `godot --headless --path . --check-only --script res://path/to/file.gd` parses one
+   script. `--check-only` without `--script` checks nothing and runs the game forever.
+3. `godot --headless --path . --quit` loads the main scene and exits.
+4. `godot --headless --path . --script res://tests/<name>.gd` runs a simulation test.
+
+If a command times out, a Godot process is probably still running. Kill it before
+continuing. `.import` files are committed; `.godot/` and `.claude/` never are.
+
+## Tests
+
+`tests/` holds headless simulation scripts (`extends SceneTree`). Each instantiates
+`main.tscn`, drives `Input.action_press` / `action_release` over physics ticks, and prints
+measured values next to the design targets. They are the only way this project can check
+feel without a human, so they are committed, kept current, and re-run whenever movement,
+combat or the camera changes. State the expected values at the top of each script.
+
+Headless quirks: the dummy viewport is 64x64 and ignores `root.size` and `--resolution`, so
+never assert on screen size. Probe camera limits by pushing the target past the bounds and
+comparing `get_screen_center_position()` with limit plus half of 64. Release an action once,
+not every tick, or `is_action_just_released` fires repeatedly. RID and ObjectDB leak
+warnings at exit are noise.
+
 ## Art and audio
 
 Placeholder only until the design says otherwise. Use ColorRect, Polygon2D or a solid-color
@@ -86,7 +117,8 @@ Do not download asset packs or generate images unless asked.
 - One feature per session. Finish it, make it testable, stop. Do not start the next thing.
 - Before large architectural changes (new autoload, changing the room system, changing how
   the camera works), explain the plan in two or three sentences and wait for a yes.
-- Keep every commit small and describe what changed and why. Do not commit `.godot/`.
+- Keep every commit small and describe what changed and why. Push at the end of every
+  session; the developer works on two machines and an unpushed session is invisible.
 - At the end of a session, print a **How to test** section: which scene to run (F5 or F6),
   what to press, what should happen, and what to look for if it feels wrong. The developer
   has limited time; make the test take under five minutes.
