@@ -37,6 +37,7 @@ var _first_hit_checked: bool = false
 var _died_at: int = -1
 var _died_signal: bool = false
 var _reported: bool = false
+var _main: Node
 
 
 func _initialize() -> void:
@@ -45,9 +46,7 @@ func _initialize() -> void:
 	_player = main.get_node("Rostam") as Rostam
 	_player.died.connect(func() -> void: _died_signal = true)
 
-	var hazard: Node2D = HAZARD_SCENE.instantiate() as Node2D
-	hazard.position = HAZARD_POSITION
-	main.get_node("Room").add_child(hazard)
+	_main = main
 
 
 func _physics_process(_delta: float) -> bool:
@@ -56,6 +55,14 @@ func _physics_process(_delta: float) -> bool:
 		printerr("test_health: timed out after %d hits" % _hit_ticks.size())
 		quit(1)
 		return true
+
+	# The room only exists once main._ready has run, which is the first frame.
+	if _tick == 1:
+		var hazard: Node2D = HAZARD_SCENE.instantiate() as Node2D
+		hazard.position = HAZARD_POSITION
+		var room: Room = (_main.get_node("RoomManager") as RoomManager).get_current_room()
+		room.add_child(hazard)
+		return false
 
 	# main.gd puts Rostam on the room spawn in _ready, so move him after that.
 	if _tick == 3:

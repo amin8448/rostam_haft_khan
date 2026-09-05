@@ -44,6 +44,7 @@ const HIGH_AIR: Vector2 = Vector2(300, 150)
 var _player: Rostam
 var _mace: Hitbox
 var _dummy: Node2D
+var _main: Node
 var _tick: int = 0
 var _failures: int = 0
 
@@ -66,12 +67,7 @@ func _initialize() -> void:
 	root.add_child(main)
 	_player = main.get_node("Rostam") as Rostam
 	_mace = _player.get_node("Visuals/MaceHitbox") as Hitbox
-	_dummy = DUMMY_SCENE.instantiate() as Node2D
-	# position, not global_position, and before add_child: Enemy._ready records
-	# its home on entering the tree, and reset() would otherwise send it to the
-	# origin.
-	_dummy.position = DUMMY_POSITION
-	main.get_node("Room").add_child(_dummy)
+	_main = main
 
 
 func _physics_process(_delta: float) -> bool:
@@ -83,6 +79,17 @@ func _physics_process(_delta: float) -> bool:
 
 	# main.gd puts Rostam on the room spawn in _ready, so move him after that
 	# and give him a few ticks to settle before anything is measured.
+	if _tick == 1:
+		# The room only exists once main._ready has run, which is the first frame
+		# and not _initialize.
+		_dummy = DUMMY_SCENE.instantiate() as Node2D
+		# position, not global_position, and before add_child: Enemy._ready
+		# records its home on entering the tree, and reset() would otherwise send
+		# it to the origin.
+		_dummy.position = DUMMY_POSITION
+		_room().add_child(_dummy)
+		return false
+
 	if _tick == 3:
 		_player.global_position = EMPTY_GROUND
 		_phase_start = _tick + 15
@@ -269,3 +276,7 @@ func _run_air() -> void:
 		_failures += 0 if Support.exact("air attack does not combo",
 				_player.is_attacking(), false) else 1
 		_phase = "done"
+
+
+func _room() -> Room:
+	return (_main.get_node("RoomManager") as RoomManager).get_current_room()

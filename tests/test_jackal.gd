@@ -34,8 +34,9 @@ const FAR_AWAY: Vector2 = Vector2(1000, 612)
 
 var _jackal: Jackal
 var _wall_jackal: Jackal
-var _room: Node2D
+var _room: Room
 var _player: Rostam
+var _main: Node
 var _tick: int = 0
 var _failures: int = 0
 
@@ -58,8 +59,7 @@ func _initialize() -> void:
 	var main: Node = (load("res://scenes/world/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	_player = main.get_node("Rostam") as Rostam
-	_room = main.get_node("Room") as Node2D
-	_jackal = _room.get_node("Jackal") as Jackal
+	_main = main
 
 
 func _physics_process(_delta: float) -> bool:
@@ -69,8 +69,15 @@ func _physics_process(_delta: float) -> bool:
 		quit(1)
 		return true
 
+	if _tick == 1:
+		# The room only exists once main._ready has run, which is the first
+		# frame and not _initialize.
+		_room = (_main.get_node("RoomManager") as RoomManager).get_current_room()
+		_jackal = _room.get_node("Jackal") as Jackal
+		return false
+
 	if _tick == 3:
-		_player.global_position = FAR_AWAY
+		_player.respawn(FAR_AWAY)
 		_last_facing = _jackal.get_facing()
 		_phase_start = _tick
 		return false

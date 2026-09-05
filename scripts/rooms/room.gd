@@ -6,10 +6,23 @@ extends Node2D
 ## on purpose so a room that forgets to set it says so instead of silently
 ## inheriting another room's size.
 @export var bounds: Rect2 = Rect2()
+## One line shown for a moment on entering. Blank means no banner.
+@export var entry_text: String = ""
+## future_systems.md item 4: open ground Rakhsh could be ridden through. Nothing
+## reads this yet; it exists so rooms carry the flag from the start.
+@export var rideable: bool = false
 
 
-## Where Rostam stands when he enters this room from the start of the game.
-## Doors will supply their own entry points later.
+## Where a door drops Rostam. Falls back to the spawn marker so a room without
+## a matching entry is still playable rather than putting him at the origin.
+func get_entry(entry_name: StringName) -> Vector2:
+	var marker: Marker2D = get_node_or_null(String(entry_name)) as Marker2D
+	if marker != null:
+		return marker.global_position
+	return get_spawn_position()
+
+
+## Where Rostam stands when he enters this room at the start of the game.
 func get_spawn_position() -> Vector2:
 	var spawn: Marker2D = get_node_or_null("PlayerSpawn") as Marker2D
 	if spawn == null:

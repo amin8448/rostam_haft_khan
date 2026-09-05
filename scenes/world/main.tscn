@@ -1,22 +1,25 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/main.gd" id="1_main"]
-[ext_resource type="PackedScene" path="res://scenes/rooms/khan1_01_marsh.tscn" id="2_room"]
-[ext_resource type="PackedScene" path="res://scenes/player/rostam.tscn" id="3_rostam"]
-[ext_resource type="Script" path="res://scripts/world/game_camera.gd" id="4_camera"]
-[ext_resource type="PackedScene" path="res://scenes/ui/health_hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://scenes/player/rostam.tscn" id="2_rostam"]
+[ext_resource type="Script" path="res://scripts/world/game_camera.gd" id="3_camera"]
+[ext_resource type="PackedScene" path="res://scenes/ui/health_hud.tscn" id="4_hud"]
+[ext_resource type="Script" path="res://scripts/world/room_manager.gd" id="5_manager"]
+[ext_resource type="PackedScene" path="res://scenes/ui/room_banner.tscn" id="6_banner"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
 
-[node name="Room" parent="." instance=ExtResource("2_room")]
+[node name="Rooms" type="Node2D" parent="."]
 
-[node name="Rostam" parent="." instance=ExtResource("3_rostam")]
+[node name="Rostam" parent="." instance=ExtResource("2_rostam")]
 
 [node name="GameCamera" type="Camera2D" parent="."]
-script = ExtResource("4_camera")
+script = ExtResource("3_camera")
 
-[node name="HealthHud" parent="." instance=ExtResource("5_hud")]
+[node name="HealthHud" parent="." instance=ExtResource("4_hud")]
+
+[node name="RoomBanner" parent="." instance=ExtResource("6_banner")]
 
 [node name="FadeLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -29,3 +32,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
+
+[node name="RoomManager" type="Node" parent="."]
+script = ExtResource("5_manager")
