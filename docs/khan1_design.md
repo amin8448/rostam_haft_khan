@@ -72,7 +72,8 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   forward, so the third hit reads as heavier in movement as well as in reach, knockback and
   duration. A 12 px step on every swing was tried first and cut: stepping on the quick swings
   suits a Hades-like game and fights the grounded feel this one wants.
-- One air attack (single swing, no combo).
+- One air attack (single swing, no combo). Its box is bigger than the ground swings and
+  sits above Rostam's head rather than in front of him, so it sweeps the space overhead.
 - Hit pause: freeze both attacker and target for 0.05 s on a successful hit. This is the single
   biggest contributor to "crunchy" combat; do not skip it.
 - Knockback on hit for enemies (and a small self recoil for Rostam on hitting a boss).
@@ -96,8 +97,10 @@ Two types, both dumb on purpose. Patterns matter more than intelligence.
 - Hovers in a slow figure-eight above a fixed anchor point.
 - When Rostam passes underneath, it dives in a straight line toward his last position, then
   returns to the anchor.
-- 2 health, 1 damage. Can be hit with the air attack. Its underside is safe: the contact
-  damage covers the top and sides only, so the dive is the threat rather than the body.
+- 2 health, 1 damage. Killed with the air attack from directly beneath: the air swing
+  reaches above Rostam's head, and a Vulture is anchored above the top of his jump, so he
+  can hit it without ever reaching it himself. Its underside is safe anyway, the contact
+  damage covering the top and sides only, so the dive is the threat rather than the body.
 
 ## 7. Rooms and camera
 

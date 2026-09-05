@@ -51,8 +51,11 @@ const AIR_SWING: int = 3
 ## The third swing hits harder without hitting for more: section 5 asks for more
 ## knockback and a bigger box, not more damage.
 @export var swing_knockback: Array[float] = [180.0, 180.0, 320.0, 180.0]
+## The air swing is the odd one: bigger, and it sweeps the space above and in
+## front of Rostam rather than straight ahead, because the things worth hitting
+## in the air are overhead.
 @export var swing_size: Array[Vector2] = [
-	Vector2(34, 24), Vector2(34, 24), Vector2(46, 32), Vector2(34, 24),
+	Vector2(34, 24), Vector2(34, 24), Vector2(46, 32), Vector2(44, 36),
 ]
 ## Forward step per swing. The two quick swings leave Rostam planted and only
 ## the finisher travels, so the third hit reads as a lunge rather than a third
@@ -61,13 +64,16 @@ const AIR_SWING: int = 3
 @export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0]
 ## Effectively the finisher's lunge speed: no other swing steps.
 @export var swing_step_speed: float = 120.0
-## Gap from Rostam's centre to the near edge of the mace head.
-@export var mace_reach: float = 10.0
-## Height of the mace head relative to Rostam's centre, positive being lower. It
-## hangs below centre rather than at chest height because ground enemies are
-## low: the Jackal is a 24 px slab, and a chest-height swing cleared all but
-## 4 px of it, which whiffs the moment either of them is nudged.
-@export var mace_height: float = 6.0
+## Gap from Rostam's centre to the near edge of the mace head, per swing. The
+## air swing's is negative so the box straddles him instead of sitting purely in
+## front, which is what lets it reach something directly overhead.
+@export var swing_reach: Array[float] = [10.0, 10.0, 10.0, -12.0]
+## Height of the mace box relative to Rostam's centre, positive being lower,
+## per swing. The ground swings hang low because ground enemies are low: the
+## Jackal is a 24 px slab and a chest-height swing cleared all but 4 px of it.
+## The air swing goes the other way and sits above his head, so the box arrives
+## before his hurtbox does when he rises into something.
+@export var swing_height: Array[float] = [6.0, 6.0, 6.0, -34.0]
 ## No further attack input within this long after a swing and the combo drops
 ## back to the first hit.
 @export var combo_reset_time: float = 0.4
@@ -321,7 +327,8 @@ func _start_swing(index: int) -> void:
 	_mace.knockback_speed = _swing_f(swing_knockback, index)
 	var box: Vector2 = _swing_v2(swing_size, index)
 	_mace.size = box
-	_mace.offset = Vector2(mace_reach + box.x * 0.5, mace_height)
+	_mace.offset = Vector2(_swing_f(swing_reach, index) + box.x * 0.5,
+			_swing_f(swing_height, index))
 	_mace.deactivate()
 
 

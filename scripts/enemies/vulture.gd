@@ -11,8 +11,10 @@ extends Enemy
 enum State { HOVER, TELEGRAPH, DIVE, RETURN }
 
 @export_group("Hover")
-## Half-width and half-height of the figure-eight around the anchor.
-@export var hover_width: float = 56.0
+## Half-width and half-height of the figure-eight around the anchor. The width
+## is kept under 30 so the Vulture never drifts out of the air swing's box while
+## Rostam is directly beneath its anchor.
+@export var hover_width: float = 28.0
 @export var hover_height: float = 20.0
 ## Radians per second along the curve. One lap takes about 5 s at 1.2.
 @export var hover_speed: float = 1.2

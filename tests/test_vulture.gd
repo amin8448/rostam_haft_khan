@@ -10,7 +10,8 @@ extends SceneTree
 ##   the dive                 arrives within 30 px of where he was when it
 ##                            committed, not where he has since moved to
 ##   afterwards               back on the anchor, hovering again
-##   two air attacks          2 health to 0, and Rostam takes no damage doing it
+##   two air attacks          2 health to 0, from directly underneath, with
+##                            the Vulture drifting and Rostam taking no damage
 ##   contact box              trimmed contact_safe_underside off the belly
 ##   touching its side        still costs 1, so only the belly is inert
 ##
@@ -19,20 +20,23 @@ extends SceneTree
 ## jump plus the air attack can reach it. Leading its horizontal swing is a
 ## matter of play skill and is not what this check is for.
 ##
-## It swings from 45 px to the side, not from underneath, and the safe underside
-## does not change that. Rostam's capsule is 56 tall and its top sits 22 px above
-## the top of his mace box, while the Vulture is 16 px tall: by the time the mace
-## reaches its underside his head is already past its top, and his capsule spans
-## the whole body. No contact box inside that body can avoid him, so trimming the
-## belly makes it safe to be under but not safe to attack from under.
-## 45 px clears the two bodies (12 + 18 = 30) while leaving the mace, which
-## reaches 44 px, well inside it.
+## It swings from directly underneath, with the Vulture still drifting. Two
+## things make that safe. The air swing has its own reach and height, so its box
+## sits above Rostam's head and straddles him rather than sitting purely in
+## front. And the Vulture is anchored above his jump apex: his head tops out at
+## 593 while the contact box is at 566 to 574, so he cannot reach it at all from
+## the floor. The mace still does, with a 52 px band of overlap around the apex.
+##
+## Only diving is switched off, so what is under test is the attack rather than
+## whichever of them lands first. Note detect_width must go negative, not to
+## zero: zero still fires on exact alignment, which is precisely where Rostam is
+## standing here.
 
 const Support = preload("res://tests/test_support.gd")
 
 const TIMEOUT: int = 2400
-## VultureWest in room 2.
-const ANCHOR: Vector2 = Vector2(560, 630)
+## VultureWest in room 2, anchored above Rostam's jump apex.
+const ANCHOR: Vector2 = Vector2(560, 576)
 ## Directly below the anchor, on room 2's floor.
 const UNDERNEATH: Vector2 = Vector2(560, 740)
 ## Clear ground, out of range of both Vultures and clear of the west door.
@@ -166,10 +170,9 @@ func _run_return() -> void:
 
 	_check_contact_box()
 
-	# Park it on its anchor for the reach test.
+	# Left hovering on purpose: the point is that it can be hit while drifting.
 	_vulture.reset()
-	_vulture.hover_speed = 0.0
-	_vulture.detect_width = 0.0
+	_vulture.detect_width = -1.0
 	_phase = "kill"
 	_phase_start = _tick
 
@@ -177,7 +180,7 @@ func _run_return() -> void:
 func _run_kill() -> void:
 	var at: int = _tick - _phase_start
 	if at == 5:
-		_player.respawn(Vector2(_vulture.global_position.x - 45.0, UNDERNEATH.y))
+		_player.respawn(Vector2(_vulture.get_anchor().x, UNDERNEATH.y))
 		_health_at_kill = _player.health
 		return
 	# respawn() drops him from exactly resting height and he settles over a few

@@ -40,7 +40,7 @@ script = ExtResource("4_vaail")
 target_room = "res://scenes/rooms/khan1_03_cliffs.tscn"
 
 [node name="VultureWest" parent="." instance=ExtResource("9_vulture")]
-position = Vector2(560, 630)
+position = Vector2(560, 576)
 
 [node name="VultureEast" parent="." instance=ExtResource("9_vulture")]
-position = Vector2(960, 630)
+position = Vector2(960, 576)
