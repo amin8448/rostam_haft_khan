@@ -63,7 +63,11 @@ const AIR_SWING: int = 3
 @export var swing_step_speed: float = 120.0
 ## Gap from Rostam's centre to the near edge of the blade.
 @export var sword_reach: float = 10.0
-@export var sword_height: float = -4.0
+## Height of the blade relative to Rostam's centre, positive being lower. It
+## hangs below centre rather than at chest height because ground enemies are
+## low: the Jackal is a 24 px slab, and a chest-height blade cleared all but
+## 4 px of it, which whiffs the moment either of them is nudged.
+@export var sword_height: float = 6.0
 ## No further attack input within this long after a swing and the combo drops
 ## back to the first hit.
 @export var combo_reset_time: float = 0.4

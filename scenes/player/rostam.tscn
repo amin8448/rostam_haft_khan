@@ -38,7 +38,7 @@ script = ExtResource("2_hitbox")
 knockback_speed = 180.0
 hit_pause = 0.05
 size = Vector2(34, 24)
-offset = Vector2(27, -4)
+offset = Vector2(27, 6)
 body_path = NodePath("../..")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Visuals/SwordHitbox"]
@@ -47,7 +47,7 @@ shape = SubResource("RectangleShape2D_sword")
 [node name="Blade" type="Polygon2D" parent="Visuals/SwordHitbox"]
 visible = false
 color = Color(0.72, 0.88, 1, 1)
-polygon = PackedVector2Array(10, -16, 44, -16, 44, 8, 10, 8)
+polygon = PackedVector2Array(10, -6, 44, -6, 44, 18, 10, 18)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_body")

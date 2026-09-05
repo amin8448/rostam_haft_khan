@@ -44,6 +44,13 @@ static func at_most(label: String, measured: float, limit: float, unit: String =
 	return ok
 
 
+## The other half of at_most: "at least this much".
+static func at_least(label: String, measured: float, minimum: float, unit: String = "px") -> bool:
+	var ok: bool = measured >= minimum
+	print("%s  %-28s measured %9.2f %-4s min     %9.2f" % [_mark(ok), label, measured, unit, minimum])
+	return ok
+
+
 ## For values that must match outright, such as a facing direction or a state.
 static func exact(label: String, measured: Variant, target: Variant) -> bool:
 	var ok: bool = measured == target
