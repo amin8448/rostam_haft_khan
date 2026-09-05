@@ -16,3 +16,12 @@ func get_spawn_position() -> Vector2:
 		push_warning("Room '%s' has no PlayerSpawn marker." % name)
 		return global_position
 	return spawn.global_position
+
+
+## Puts the room back to its starting state after a death. Children opt in by
+## having a reset() of their own, so the room does not need to know what lives
+## in it.
+func reset() -> void:
+	for child in get_children():
+		if child.has_method("reset"):
+			child.reset()

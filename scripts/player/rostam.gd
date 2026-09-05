@@ -1,7 +1,10 @@
 class_name Rostam
 extends CharacterBody2D
 
-enum State { IDLE, RUN, JUMP, FALL, ATTACK }
+signal health_changed(current: int, maximum: int)
+signal died
+
+enum State { IDLE, RUN, JUMP, FALL, ATTACK, DEAD }
 
 ## Indices 0 to 2 are the ground combo, index 3 is the air attack. One set of
 ## arrays rather than two so every swing goes through the same code path.
@@ -55,6 +58,16 @@ const AIR_SWING: int = 3
 ## back to the first hit.
 @export var combo_reset_time: float = 0.4
 
+@export_group("Health")
+@export var max_health: int = 5
+## Invulnerability after taking a hit, flickering so it is readable.
+@export var invulnerable_time: float = 0.8
+@export var flicker_interval: float = 0.06
+## Brief loss of control on being hit, so a hit interrupts rather than being
+## something you can run straight through.
+@export var control_loss_time: float = 0.15
+
+var health: int = 5
 var state: State = State.IDLE
 var facing: int = 1
 
@@ -67,25 +80,39 @@ var _combo_timer: float = 0.0
 var _step_remaining: float = 0.0
 var _attack_buffered: bool = false
 var _air_attack_used: bool = false
+var _invuln_timer: float = 0.0
+var _control_timer: float = 0.0
+var _flicker_timer: float = 0.0
 
 @onready var _visuals: Node2D = $Visuals
 @onready var _sword: Hitbox = $Visuals/SwordHitbox
 
 
+func _ready() -> void:
+	health = max_health
+	health_changed.emit(health, max_health)
+
+
 func _physics_process(delta: float) -> void:
+	if state == State.DEAD:
+		return
+
 	# Hit pause freezes this body only. The camera keeps running, which is the
 	# whole reason this is not Engine.time_scale.
 	if _hit_pause_timer > 0.0:
 		_hit_pause_timer -= delta
 		return
 
-	var input_x: float = Input.get_axis("move_left", "move_right")
-
 	_update_timers(delta)
+
+	# Control loss is what makes a hit land: input is ignored for a moment, but
+	# gravity and the knockback keep applying.
+	var stunned: bool = _control_timer > 0.0
+	var input_x: float = 0.0 if stunned else Input.get_axis("move_left", "move_right")
 
 	if state == State.ATTACK:
 		_update_swing(delta)
-	else:
+	elif not stunned:
 		_try_start_attack()
 
 	if state == State.ATTACK:
@@ -97,7 +124,7 @@ func _physics_process(delta: float) -> void:
 
 	# Jump after gravity, so the launch tick is exactly -jump_velocity rather
 	# than one tick of gravity short of it.
-	if state != State.ATTACK:
+	if state != State.ATTACK and not stunned:
 		_handle_jump()
 
 	move_and_slide()
@@ -123,6 +150,74 @@ func is_attacking() -> bool:
 	return state == State.ATTACK
 
 
+func is_invulnerable() -> bool:
+	return _invuln_timer > 0.0
+
+
+func is_dead() -> bool:
+	return state == State.DEAD
+
+
+## Returns true only when damage was actually applied, so the attacker can tell
+## a real hit from one absorbed by invulnerability.
+func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
+	if amount <= 0 or state == State.DEAD or _invuln_timer > 0.0:
+		return false
+
+	health = maxi(health - amount, 0)
+	health_changed.emit(health, max_health)
+	_cancel_swing()
+
+	if health == 0:
+		state = State.DEAD
+		velocity = Vector2.ZERO
+		_invuln_timer = 0.0
+		_visuals.visible = true
+		died.emit()
+		return true
+
+	_invuln_timer = invulnerable_time
+	_control_timer = control_loss_time
+	_flicker_timer = flicker_interval
+	velocity = knockback
+	state = State.IDLE if is_on_floor() else State.FALL
+	return true
+
+
+## Puts Rostam back at a spawn point with nothing left over from the run that
+## killed him: no timers, no combo, no velocity, no half-open hitbox.
+func respawn(at: Vector2) -> void:
+	global_position = at
+	velocity = Vector2.ZERO
+	health = max_health
+	state = State.IDLE
+	facing = 1
+
+	_coyote_timer = 0.0
+	_jump_buffer_timer = 0.0
+	_hit_pause_timer = 0.0
+	_invuln_timer = 0.0
+	_control_timer = 0.0
+	_flicker_timer = 0.0
+	_combo_timer = 0.0
+	_swing_index = 0
+	_swing_timer = 0.0
+	_step_remaining = 0.0
+	_attack_buffered = false
+	_air_attack_used = false
+
+	_sword.deactivate()
+	_visuals.visible = true
+	_visuals.scale.x = 1.0
+	health_changed.emit(health, max_health)
+
+
+func _cancel_swing() -> void:
+	_sword.deactivate()
+	_step_remaining = 0.0
+	_attack_buffered = false
+
+
 func get_swing_index() -> int:
 	return _swing_index
 
@@ -140,6 +235,21 @@ func _update_timers(delta: float) -> void:
 		_jump_buffer_timer = maxf(_jump_buffer_timer - delta, 0.0)
 
 	_combo_timer = maxf(_combo_timer - delta, 0.0)
+	_control_timer = maxf(_control_timer - delta, 0.0)
+	_update_invulnerability(delta)
+
+
+func _update_invulnerability(delta: float) -> void:
+	if _invuln_timer <= 0.0:
+		return
+	_invuln_timer -= delta
+	if _invuln_timer <= 0.0:
+		_visuals.visible = true
+		return
+	_flicker_timer -= delta
+	if _flicker_timer <= 0.0:
+		_flicker_timer = flicker_interval
+		_visuals.visible = not _visuals.visible
 
 
 func _try_start_attack(from_buffer: bool = false) -> void:
