@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/khan1_01_marsh.gd" id="1_idhib"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/jackal.tscn" id="9_jackal"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/vulture.tscn" id="10_vulture"]
 [ext_resource type="TileSet" path="res://assets/placeholder/terrain_tileset.tres" id="2_ly53h"]
 [ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="3_xpidn"]
 [ext_resource type="Script" path="res://scripts/world/door.gd" id="4_nfapm"]
@@ -30,6 +29,3 @@ target_room = "res://scenes/rooms/khan1_02_reeds.tscn"
 
 [node name="Jackal" parent="." instance=ExtResource("9_jackal")]
 position = Vector2(1760, 564)
-
-[node name="Vulture" parent="." instance=ExtResource("10_vulture")]
-position = Vector2(1392, 500)

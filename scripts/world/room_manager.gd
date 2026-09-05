@@ -42,7 +42,7 @@ var _respawn_position: Vector2 = Vector2.ZERO
 
 ## Called by main once the player's signals are wired.
 func start() -> void:
-	_enter_room(starting_room, starting_entry)
+	enter_room(starting_room, starting_entry)
 	_respawn_room = starting_room
 	_respawn_position = _room.get_entry(starting_entry)
 
@@ -86,7 +86,7 @@ func on_door_entered(door: Door) -> void:
 	var tween: Tween = create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, fade_time)
 	tween.tween_callback(func() -> void:
-		_enter_room(path, entry)
+		enter_room(path, entry)
 		_player.velocity = carried)
 	tween.tween_property(_fade, "color:a", 0.0, fade_time)
 	tween.tween_callback(func() -> void: _busy = false)
@@ -114,7 +114,9 @@ func _respawn() -> void:
 	_camera.set_target(_player)
 
 
-func _enter_room(path: String, entry: StringName) -> void:
+## Instant, no fade. The door path wraps this in one; a debug warp or a test
+## calls it directly.
+func enter_room(path: String, entry: StringName) -> void:
 	_load(path)
 	_player.global_position = _room.get_entry(entry)
 	# Teleporting leaves the hurtbox behind in the broadphase for a step, which

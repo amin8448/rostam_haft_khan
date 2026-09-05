@@ -31,11 +31,13 @@ extends SceneTree
 const Support = preload("res://tests/test_support.gd")
 
 const TIMEOUT: int = 2400
-const ANCHOR: Vector2 = Vector2(1392, 500)
-## Directly below the anchor, on the clear ground under the climb.
-const UNDERNEATH: Vector2 = Vector2(1392, 612)
-## Clear ground far from both the Vulture and the room's Jackal at x=1760.
-const FAR_AWAY: Vector2 = Vector2(1000, 612)
+## VultureWest in room 2.
+const ANCHOR: Vector2 = Vector2(560, 630)
+## Directly below the anchor, on room 2's floor.
+const UNDERNEATH: Vector2 = Vector2(560, 740)
+## Clear ground, out of range of both Vultures and clear of the west door.
+const FAR_AWAY: Vector2 = Vector2(180, 740)
+const REEDS: String = "res://scenes/rooms/khan1_02_reeds.tscn"
 
 var _vulture: Vulture
 var _player: Rostam
@@ -74,7 +76,9 @@ func _physics_process(_delta: float) -> bool:
 
 	if _tick == 1:
 		# The room only exists once main._ready has run, which is the first frame.
-		_vulture = (_main.get_node("RoomManager") as RoomManager) 				.get_current_room().get_node("Vulture") as Vulture
+		var manager: RoomManager = _main.get_node("RoomManager") as RoomManager
+		manager.enter_room(REEDS, &"EntryWest")
+		_vulture = manager.get_current_room().get_node("VultureWest") as Vulture
 		return false
 
 	if _tick == 3:

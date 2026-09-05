@@ -1,6 +1,8 @@
 [gd_scene format=4]
 
 [ext_resource type="Script" path="res://scripts/rooms/khan1_03_cliffs.gd" id="1_eany7"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/jackal.tscn" id="9_jackal"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/vulture.tscn" id="10_vulture"]
 [ext_resource type="TileSet" path="res://assets/placeholder/terrain_tileset.tres" id="2_lx1j0"]
 [ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="3_2t7bt"]
 [ext_resource type="Script" path="res://scripts/world/door.gd" id="4_ukmap"]
@@ -37,3 +39,15 @@ collision_layer = 0
 collision_mask = 2
 script = ExtResource("4_ukmap")
 target_room = "res://scenes/rooms/khan1_04_camp.tscn"
+
+[node name="JackalMid" parent="." instance=ExtResource("9_jackal")]
+position = Vector2(688, 532)
+
+[node name="VultureMid" parent="." instance=ExtResource("10_vulture")]
+position = Vector2(1180, 510)
+
+[node name="JackalEast" parent="." instance=ExtResource("9_jackal")]
+position = Vector2(1328, 532)
+
+[node name="VultureEast" parent="." instance=ExtResource("10_vulture")]
+position = Vector2(1910, 510)
