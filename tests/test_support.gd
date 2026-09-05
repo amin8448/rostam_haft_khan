@@ -36,6 +36,14 @@ static func near_time(label: String, measured: float, target: float) -> bool:
 	return ok
 
 
+## For a limit rather than a target: "no more than this". Prints the measured
+## number, which a plain boolean check would throw away.
+static func at_most(label: String, measured: float, limit: float, unit: String = "px") -> bool:
+	var ok: bool = measured <= limit
+	print("%s  %-28s measured %9.2f %-4s limit   %9.2f" % [_mark(ok), label, measured, unit, limit])
+	return ok
+
+
 ## For values that must match outright, such as a facing direction or a state.
 static func exact(label: String, measured: Variant, target: Variant) -> bool:
 	var ok: bool = measured == target

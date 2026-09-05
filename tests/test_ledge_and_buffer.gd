@@ -11,6 +11,9 @@ extends SceneTree
 ##                                         variable-height cut must not apply
 ##   facing after Left            -1
 ##   Visuals.scale.x              -1
+##   a one-tick -0.3 nudge        no flip: that is stick rebound past centre,
+##                                not a turn, and it sits under facing_threshold
+##   a sustained -1.0             flips within 4 ticks
 ##
 ## The ledge is the left lip of the pit at col 15, world x 480.
 ## Note: release an action once, not every tick. Calling Input.action_release
@@ -39,6 +42,9 @@ var _land_tick: int = 0
 var _pressed_buffer: bool = false
 var _coyote_peak: float = 0.0
 var _buffer_peak: float = 0.0
+var _facing_start: int = -1
+var _left_press_tick: int = -1
+var _flip_tick: int = -1
 
 
 func _initialize() -> void:
@@ -92,15 +98,43 @@ func _physics_process(_delta: float) -> bool:
 			if _tick > _land_tick + 10:
 				_failures += 0 if Support.near("buffered jump on landing", _buffer_peak, -640.0, "px/s") else 1
 				_failures += 0 if Support.exact("airborne after landing", not _player.is_on_floor(), true) else 1
-				Input.action_press("move_left")
+				# No input pressed here: the facing phase needs to start from a
+				# clean stick, or the rebound check is measuring a real turn.
 				_phase = Phase.FACING
 		Phase.FACING:
-			if _player.get_facing() == -1 or _tick > _land_tick + 40:
-				_failures += 0 if Support.exact("facing after Left", _player.get_facing(), -1) else 1
-				_failures += 0 if Support.near("Visuals.scale.x", _visuals.scale.x, -1.0, "") else 1
-				Input.action_release("move_left")
-				_phase = Phase.DONE
+			_run_facing()
 		Phase.DONE:
 			quit(Support.report("test_ledge_and_buffer", _failures))
 			return true
 	return false
+
+
+## Facing has to ignore a stick that rebounds past centre on release or reversal
+## without becoming sluggish about a real turn, so both halves are checked here.
+func _run_facing() -> void:
+	if _facing_start < 0:
+		_facing_start = _tick
+		_failures += 0 if Support.exact("facing right before the test",
+				_player.get_facing(), 1) else 1
+
+	var at: int = _tick - _facing_start
+	if at == 2:
+		# One tick at -0.3: weaker than facing_threshold, so it is rebound.
+		Input.action_press("move_left", 0.3)
+	elif at == 3:
+		Input.action_release("move_left")
+	elif at == 10:
+		_failures += 0 if Support.exact("rebound of -0.3 does not flip",
+				_player.get_facing(), 1) else 1
+		Input.action_press("move_left")
+		_left_press_tick = _tick
+	elif at > 10 and _flip_tick < 0 and _player.get_facing() == -1:
+		_flip_tick = _tick
+	elif at == 24:
+		_failures += 0 if Support.exact("sustained -1.0 flips facing",
+				_player.get_facing(), -1) else 1
+		var ticks: float = float(_flip_tick - _left_press_tick) if _flip_tick > 0 else 99.0
+		_failures += 0 if Support.at_most("ticks to flip", ticks, 4.0, "tk") else 1
+		_failures += 0 if Support.near("Visuals.scale.x", _visuals.scale.x, -1.0, "") else 1
+		Input.action_release("move_left")
+		_phase = Phase.DONE

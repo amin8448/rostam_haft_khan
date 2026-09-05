@@ -17,6 +17,13 @@ const AIR_SWING: int = 3
 @export var time_to_max_speed: float = 0.1
 ## Seconds to come to a full stop once input is released.
 @export var time_to_stop: float = 0.08
+## A stick released or reversed rebounds past centre for a frame or two. Facing
+## ignores anything weaker than this, so the rebound cannot spin Rostam round.
+## Movement and acceleration still use the full analog value.
+@export var facing_threshold: float = 0.5
+## Consecutive physics ticks the input must hold a new direction before facing
+## follows it. Catches a rebound strong enough to clear facing_threshold.
+@export var facing_hold_ticks: int = 3
 
 @export_group("Jump")
 @export var jump_velocity: float = 640.0
@@ -86,6 +93,8 @@ var _air_attack_used: bool = false
 var _invuln_timer: float = 0.0
 var _control_timer: float = 0.0
 var _flicker_timer: float = 0.0
+var _facing_candidate: int = 0
+var _facing_hold: int = 0
 
 @onready var _visuals: Node2D = $Visuals
 @onready var _sword: Hitbox = $Visuals/SwordHitbox
@@ -216,6 +225,8 @@ func respawn(at: Vector2) -> void:
 	_step_remaining = 0.0
 	_attack_buffered = false
 	_air_attack_used = false
+	_facing_candidate = 0
+	_facing_hold = 0
 
 	_sword.deactivate()
 	_visuals.visible = true
@@ -371,10 +382,29 @@ func _handle_jump() -> void:
 
 
 func _update_facing(input_x: float) -> void:
-	if absf(input_x) < 0.1:
+	if absf(input_x) < facing_threshold:
+		_facing_candidate = 0
+		_facing_hold = 0
 		return
-	facing = 1 if input_x > 0.0 else -1
+
+	var wanted: int = 1 if input_x > 0.0 else -1
+	if wanted == facing:
+		_facing_candidate = 0
+		_facing_hold = 0
+		return
+
+	if wanted != _facing_candidate:
+		_facing_candidate = wanted
+		_facing_hold = 1
+	else:
+		_facing_hold += 1
+
+	if _facing_hold < facing_hold_ticks:
+		return
+	facing = wanted
 	_visuals.scale.x = float(facing)
+	_facing_candidate = 0
+	_facing_hold = 0
 
 
 func _update_state(input_x: float) -> void:
