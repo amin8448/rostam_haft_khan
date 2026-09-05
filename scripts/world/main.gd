@@ -11,6 +11,7 @@ extends Node2D
 func _ready() -> void:
 	_player.health_changed.connect(_on_health_changed)
 	_player.died.connect(_manager.on_player_died)
+	_player.damaged.connect(_manager.on_player_damaged)
 	_on_health_changed(_player.health, _player.max_health)
 	_manager.start()
 

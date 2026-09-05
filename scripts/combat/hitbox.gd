@@ -91,13 +91,22 @@ func is_active() -> bool:
 	return monitoring
 
 
+## Whatever this box belongs to, for anything that needs the attacker rather
+## than the attack.
+func get_body() -> Node2D:
+	return _body
+
+
 func _try_hit(area: Area2D) -> void:
 	if _already_hit.has(area) or not area.has_method("receive_hit"):
 		return
 	_already_hit.append(area)
 
 	var target: Node2D = area.get_body() if area.has_method("get_body") else area
-	if not area.receive_hit(damage, _knockback_for(target), _body):
+	# The hitbox itself is handed over as the source, not the body it belongs to.
+	# Nothing reads it as a body, and naming which box landed is what makes a hit
+	# explainable.
+	if not area.receive_hit(damage, _knockback_for(target), self):
 		return
 
 	hit_landed.emit(target)

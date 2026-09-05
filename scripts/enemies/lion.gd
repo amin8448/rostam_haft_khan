@@ -38,7 +38,7 @@ enum Attack { NONE, SWIPE, POUNCE }
 @export_group("Swipe")
 ## Close range: inside this, it swipes.
 @export var swipe_range: float = 150.0
-@export var swipe_telegraph: float = 0.4
+@export var swipe_telegraph: float = 0.55
 @export var swipe_active: float = 0.18
 @export var swipe_recover: float = 0.35
 @export var swipe_damage: int = 2
@@ -51,7 +51,7 @@ enum Attack { NONE, SWIPE, POUNCE }
 @export_group("Pounce")
 ## Medium range: outside swipe_range and inside this, it pounces.
 @export var pounce_range: float = 400.0
-@export var pounce_telegraph: float = 0.5
+@export var pounce_telegraph: float = 0.65
 @export var pounce_air_time: float = 0.7
 @export var pounce_max_speed: float = 520.0
 @export var pounce_land_active: float = 0.15
@@ -60,6 +60,20 @@ enum Attack { NONE, SWIPE, POUNCE }
 @export var pounce_damage: int = 2
 @export var pounce_size: Vector2 = Vector2(120, 40)
 @export var pounce_shake: float = 5.0
+
+@export_group("Tells")
+## The danger preview: the attack's box, drawn where and how big the hit will
+## actually be, for the length of the telegraph. Purple, per the hazard colour.
+@export var preview_color: Color = Color(0.55, 0.25, 0.75, 0.35)
+## Half the drawn body height, used to keep its feet on the floor while the
+## visuals squash and stretch.
+@export var body_half_height: float = 32.0
+## The swipe leans back away from Rostam before it comes forward.
+@export var swipe_lean: float = 12.0
+## The pounce crouches.
+@export var pounce_crouch: float = 0.7
+## The roar swells.
+@export var roar_grow: float = 1.1
 
 @export_group("Roar")
 @export var roar_interval: float = 15.0
@@ -83,6 +97,7 @@ var _pounce_start_y: float = 0.0
 
 @onready var _swipe: Hitbox = $SwipeHitbox
 @onready var _pounce: Hitbox = $PounceHitbox
+@onready var _preview: Polygon2D = $DangerPreview
 
 
 func get_facing() -> int:
@@ -95,6 +110,21 @@ func is_awake() -> bool:
 
 func in_phase_two() -> bool:
 	return _phase_two
+
+
+func is_preview_visible() -> bool:
+	return _preview.visible
+
+
+## The drawn size of the danger preview, for checking it against the box it is
+## supposed to be showing.
+func get_preview_size() -> Vector2:
+	if _preview.polygon.size() < 3:
+		return Vector2.ZERO
+	var rect: Rect2 = Rect2(_preview.polygon[0], Vector2.ZERO)
+	for point in _preview.polygon:
+		rect = rect.expand(point)
+	return rect.size
 
 
 ## Called by the arena when Rostam crosses the trigger line.
@@ -121,6 +151,8 @@ func begin_final_pounce() -> void:
 ## Stops it acting without beating it, for the moment the sequence takes over.
 func hold() -> void:
 	_land_from_pounce()
+	_hide_preview()
+	_shape_visuals(1.0, 1.0, 0.0)
 	state = State.PINNED
 	velocity = Vector2.ZERO
 	_swipe.deactivate()
@@ -131,6 +163,8 @@ func hold() -> void:
 ## still be there to throw. Inert from here on.
 func set_defeated() -> void:
 	_land_from_pounce()
+	_hide_preview()
+	_shape_visuals(1.0, 1.0, 0.0)
 	health = 0
 	state = State.PINNED
 	velocity = Vector2.ZERO
@@ -164,6 +198,8 @@ func _on_ready() -> void:
 
 func _on_reset() -> void:
 	_land_from_pounce()
+	_hide_preview()
+	_shape_visuals(1.0, 1.0, 0.0)
 	state = State.ASLEEP
 	facing = start_facing
 	_timer = 0.0
@@ -235,10 +271,24 @@ func _begin_attack(attack: Attack) -> void:
 	_timer = swipe_telegraph if attack == Attack.SWIPE else pounce_telegraph
 	telegraph(_timer)
 
+	if attack == Attack.SWIPE:
+		_apply_boxes()
+		_show_preview(swipe_size, _swipe.offset)
+	else:
+		# The pounce commits here rather than at the end of the crouch, so the
+		# preview can show where it is going for the whole wind-up. Section 8
+		# calls it his position at the start of the pounce, and the start of the
+		# pounce is the crouch.
+		var player: Node2D = get_player()
+		_pounce_target = player.global_position if player != null else global_position
+		_show_preview(pounce_size, Vector2(
+			_pounce_target.x - global_position.x, pounce_size.y * 0.5))
+
 
 func _begin_roar() -> void:
 	state = State.ROAR
 	velocity.x = 0.0
+	_shape_visuals(roar_grow, roar_grow, 0.0)
 	_timer = roar_time
 	_roar_timer = roar_interval
 	telegraph(roar_time)
@@ -247,9 +297,22 @@ func _begin_roar() -> void:
 func _telegraph_tick(delta: float) -> void:
 	velocity.x = 0.0
 	_timer -= delta
+
+	# The body says what is coming as well as the colour does: the swipe leans
+	# back before it comes forward, the pounce crouches.
+	var full: float = swipe_telegraph if _attack == Attack.SWIPE else pounce_telegraph
+	var progress: float = clampf(1.0 - _timer / maxf(full, 0.01), 0.0, 1.0)
+	if _attack == Attack.SWIPE:
+		_shape_visuals(1.0, 1.0, -float(facing) * swipe_lean * progress)
+	else:
+		_shape_visuals(1.0, lerpf(1.0, pounce_crouch, progress), 0.0)
+
 	if _timer > 0.0:
 		return
 
+	# The preview goes as the real box arrives: one or the other, never both.
+	_hide_preview()
+	_shape_visuals(1.0, 1.0, 0.0)
 	if _attack == Attack.SWIPE:
 		state = State.SWIPE
 		_timer = swipe_active
@@ -262,8 +325,6 @@ func _telegraph_tick(delta: float) -> void:
 ## The pounce commits to where Rostam was when the crouch ended, not to where he
 ## is. That is what makes it dodgeable.
 func _launch_pounce() -> void:
-	var player: Node2D = get_player()
-	_pounce_target = player.global_position if player != null else global_position
 	_face_toward(_pounce_target.x)
 
 	var dx: float = _pounce_target.x - global_position.x
@@ -318,6 +379,8 @@ func _wait(delta: float) -> void:
 	_timer -= delta
 	if _timer > 0.0:
 		return
+	if state == State.ROAR:
+		_shape_visuals(1.0, 1.0, 0.0)
 
 	# The landing box closes partway through recovery, leaving the rest of it as
 	# the opening section 8 asks for.
@@ -340,7 +403,29 @@ func _face_toward(x: float) -> void:
 
 
 func _apply_facing() -> void:
-	_visuals.scale.x = float(facing)
+	_shape_visuals(absf(_visuals.scale.x), _visuals.scale.y, _visuals.position.x)
+
+
+## Visuals only. The collision shape, the hurtbox and the attack boxes never
+## move, so what squashes is what is drawn and nothing that hits or is hit.
+func _shape_visuals(scale_x: float, scale_y: float, lean: float) -> void:
+	_visuals.scale = Vector2(float(facing) * scale_x, scale_y)
+	# Keeps its feet on the floor whichever way it is scaled.
+	_visuals.position = Vector2(lean, body_half_height * (1.0 - scale_y))
+
+
+func _show_preview(size: Vector2, at: Vector2) -> void:
+	var half: Vector2 = size * 0.5
+	_preview.color = preview_color
+	_preview.polygon = PackedVector2Array([
+		at + Vector2(-half.x, -half.y), at + Vector2(half.x, -half.y),
+		at + Vector2(half.x, half.y), at + Vector2(-half.x, half.y),
+	])
+	_preview.visible = true
+
+
+func _hide_preview() -> void:
+	_preview.visible = false
 
 
 ## The attack boxes sit outside Visuals so the telegraph flash does not recolour

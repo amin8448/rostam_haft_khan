@@ -13,11 +13,13 @@ func _ready() -> void:
 	_label.modulate.a = 0.0
 
 
-func show_text(text: String) -> void:
+## A negative hold uses the default. A shorter one is for messages that should
+## not sit on screen, like the debug readout of what just hit Rostam.
+func show_text(text: String, hold: float = -1.0) -> void:
 	if text.is_empty():
 		return
 	_label.text = text
 	var tween: Tween = create_tween()
 	tween.tween_property(_label, "modulate:a", 1.0, fade_time)
-	tween.tween_interval(hold_time)
+	tween.tween_interval(hold_time if hold < 0.0 else hold)
 	tween.tween_property(_label, "modulate:a", 0.0, fade_time)

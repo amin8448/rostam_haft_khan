@@ -149,6 +149,23 @@ which left the swap feeling abrupt. Rostam keeps his velocity through doors.
 
 Arena: `khan1_05_den`. The Lion is large (about 3 tiles wide, 2 tall). 30 health.
 
+Every attack is telegraphed in three layers at once, because the first playtest could not
+read any of them. All three run for the whole wind-up and stop the instant the hitbox opens:
+
+- **A danger preview.** The attack's hitbox is drawn where and how big it will actually be,
+  in translucent purple per the hazard colour: the swipe box beside the Lion, the landing
+  box at the spot the pounce is aimed. It is built from the same exports the real box uses,
+  so it cannot promise something the hit does not deliver. The pounce therefore commits to
+  Rostam's position when the crouch starts rather than when it ends, which is what lets the
+  preview show the landing spot for the whole wind-up.
+- **Body motion.** The swipe leans back away from Rostam before coming forward, the pounce
+  squashes into a crouch, the roar swells. Drawn body only; nothing that hits or is hit
+  moves.
+- **Colour.** A near-white cream, which reads as a warning against orange rather than as a
+  lighter shade of it.
+
+Wind-ups are 0.55 s for the swipe and 0.65 s for the pounce. This is a first boss.
+
 Attacks, each with a clear telegraph:
 - **Swipe**: when Rostam is close. 0.4 s wind-up (leans back), then a wide short-range hitbox.
   2 damage.

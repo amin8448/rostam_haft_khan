@@ -8,6 +8,8 @@ extends SceneTree
 ##   Rostam close              swipe
 ##   Rostam at medium range    pounce
 ##   telegraph lengths         the exported ones, within a physics tick
+##   the danger preview        up during a telegraph, gone once the box opens,
+##                             and exactly the size of the box it is previewing
 ##   the pounce                lands near where Rostam was when it launched
 ##   roar                      inside its interval
 ##   the mace                  damages it, and shoves Rostam back
@@ -44,6 +46,8 @@ var _lion_hp_before: int = 0
 var _recoil: float = 0.0
 var _roar_seen: bool = false
 var _armed: bool = false
+var _preview_up: bool = false
+var _preview_size: Vector2 = Vector2.ZERO
 
 
 func _initialize() -> void:
@@ -136,12 +140,24 @@ func _run_swipe() -> void:
 		return
 	if not _arm():
 		return
-	if _lion.state == Lion.State.TELEGRAPH and _telegraph_at < 0:
-		_telegraph_at = _tick
+	if _lion.state == Lion.State.TELEGRAPH:
+		if _telegraph_at < 0:
+			_telegraph_at = _tick
+		_preview_up = _preview_up or _lion.is_preview_visible()
+		if _lion.is_preview_visible():
+			_preview_size = _lion.get_preview_size()
 	elif _lion.state == Lion.State.SWIPE and _telegraph_at > 0:
 		_failures += 0 if Support.exact("swipes when Rostam is close", true, true) else 1
 		_failures += 0 if Support.near_time("swipe telegraph",
 				float(_tick - _telegraph_at) / 60.0, _lion.swipe_telegraph) else 1
+		_failures += 0 if Support.exact("swipe preview shows during the wind-up",
+				_preview_up, true) else 1
+		_failures += 0 if Support.exact("swipe preview goes when the box opens",
+				_lion.is_preview_visible(), false) else 1
+		_failures += 0 if Support.near("swipe preview width",
+				_preview_size.x, _lion.swipe_size.x) else 1
+		_failures += 0 if Support.near("swipe preview height",
+				_preview_size.y, _lion.swipe_size.y) else 1
 		_begin("pounce")
 	elif _lion.state == Lion.State.POUNCE:
 		_failures += 0 if Support.exact("swipes when Rostam is close", false, true) else 1
@@ -157,14 +173,26 @@ func _run_pounce() -> void:
 	# swipe phase is read as this phase's choice.
 	if not _arm():
 		return
-	if _lion.state == Lion.State.TELEGRAPH and _telegraph_at < 0:
-		_telegraph_at = _tick
+	if _lion.state == Lion.State.TELEGRAPH:
+		if _telegraph_at < 0:
+			_telegraph_at = _tick
+		_preview_up = _preview_up or _lion.is_preview_visible()
+		if _lion.is_preview_visible():
+			_preview_size = _lion.get_preview_size()
 	elif _lion.state == Lion.State.POUNCE and _state_at < 0:
 		_state_at = _tick
 		_pounce_from = _player.global_position.x
 		_failures += 0 if Support.exact("pounces at medium range", true, true) else 1
 		_failures += 0 if Support.near_time("pounce telegraph",
 				float(_tick - _telegraph_at) / 60.0, _lion.pounce_telegraph) else 1
+		_failures += 0 if Support.exact("pounce preview shows during the crouch",
+				_preview_up, true) else 1
+		_failures += 0 if Support.exact("pounce preview goes on launch",
+				_lion.is_preview_visible(), false) else 1
+		_failures += 0 if Support.near("pounce preview width",
+				_preview_size.x, _lion.pounce_size.x) else 1
+		_failures += 0 if Support.near("pounce preview height",
+				_preview_size.y, _lion.pounce_size.y) else 1
 	elif _state_at > 0 and _lion.state == Lion.State.RECOVER:
 		# It commits to where he was, so this is measured against that, not
 		# against where he has since ended up.
@@ -272,6 +300,8 @@ func _begin(next: String) -> void:
 	_telegraph_at = -1
 	_state_at = -1
 	_armed = false
+	_preview_up = false
+	_preview_size = Vector2.ZERO
 
 
 ## True once the Lion is back to walking, so a phase never reads the state its

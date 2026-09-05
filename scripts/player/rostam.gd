@@ -2,6 +2,8 @@ class_name Rostam
 extends CharacterBody2D
 
 signal health_changed(current: int, maximum: int)
+## What landed the hit, so the world can say so. The Hitbox, not its owner.
+signal damaged(source: Node)
 signal died
 
 enum State { IDLE, RUN, JUMP, FALL, ATTACK, DEAD }
@@ -230,10 +232,11 @@ func set_pinned(pinned: bool) -> void:
 
 ## Returns true only when damage was actually applied, so the attacker can tell
 ## a real hit from one absorbed by invulnerability.
-func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
+func take_damage(amount: int, knockback: Vector2, source: Node2D) -> bool:
 	if amount <= 0 or state == State.DEAD or _invuln_timer > 0.0 or _pinned:
 		return false
 
+	damaged.emit(source)
 	health = maxi(health - amount, 0)
 	health_changed.emit(health, max_health)
 	_cancel_swing()

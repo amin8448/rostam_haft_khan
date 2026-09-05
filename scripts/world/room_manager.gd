@@ -18,6 +18,10 @@ signal room_entered(room: Room)
 @export var starting_entry: StringName = &"PlayerSpawn"
 ## Shown when Rostam rests, so it is visible that it worked.
 @export var rest_text: String = "Rested."
+## Names the hitbox that landed, so a playtest can report which attack is
+## getting through rather than guessing. Meant to be turned off once it has
+## answered that.
+@export var debug_show_damage_source: bool = true
 
 @export_group("Wiring")
 @export var rooms_parent_path: NodePath = ^"../Rooms"
@@ -100,9 +104,9 @@ func set_respawn(room_path: String, position: Vector2) -> void:
 
 
 ## Banner and boss bar passthroughs, so a room never has to find the UI.
-func show_text(text: String) -> void:
+func show_text(text: String, hold: float = -1.0) -> void:
 	if _banner != null and _banner.has_method("show_text"):
-		_banner.show_text(text)
+		_banner.show_text(text, hold)
 
 
 func show_boss(current: int, maximum: int) -> void:
@@ -181,6 +185,12 @@ func restart() -> void:
 
 func is_slice_complete() -> bool:
 	return _complete != null and _complete.has_method("is_showing") and _complete.is_showing()
+
+
+func on_player_damaged(source: Node) -> void:
+	if not debug_show_damage_source or source == null:
+		return
+	show_text("Hit by: %s" % source.name, 1.0)
 
 
 func on_player_died() -> void:
