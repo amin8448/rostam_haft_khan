@@ -36,10 +36,14 @@ on every action.
 | jump      | Space             | A (bottom face button)    |
 | attack    | Z, J              | X (left face button)      |
 | dash      | Shift, K          | RT or B                   |
-| interact  | E, Up arrow       | Y (top face button)       |
+| interact  | E                 | Y (top face button)       |
+| aim_up    | Up arrow, W       | Left stick up, D-pad up   |
 | pause     | Escape            | Start                     |
 
 Dash is defined in the input map now but implemented in a later session.
+
+`aim_up` is held, not tapped: with `attack` it aims the swing upward. The Up arrow was
+moved off `interact` so holding it to aim can never rest at a grazing ground by accident.
 
 ## 4. Movement feel
 
@@ -74,6 +78,11 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   suits a Hades-like game and fights the grounded feel this one wants.
 - One air attack (single swing, no combo). Its box is bigger than the ground swings and
   sits above Rostam's head rather than in front of him, so it sweeps the space overhead.
+- One upward swing, on `aim_up` plus `attack`, on the ground or in the air. Same box as the
+  air attack but raised so its bottom edge clears the top of his head, which is what makes
+  it an aimed attack rather than an air attack that happens to point up. It takes no forward
+  step, and it is outside the combo: it neither continues one nor counts as a hit in one, so
+  the next ground attack starts from the first swing again.
 - Hit pause: freeze both attacker and target for 0.05 s on a successful hit. This is the single
   biggest contributor to "crunchy" combat; do not skip it.
 - Knockback on hit for enemies (and a small self recoil for Rostam on hitting a boss).

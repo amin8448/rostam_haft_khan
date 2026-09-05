@@ -14,6 +14,9 @@ extends SceneTree
 ##   hit pause on a landed hit    0.05 s
 ##   combo after 0.4 s idle       back to swing 1
 ##   air attack                   swing index 3, once per airborne period
+##   Up + attack on the ground    swing index 4, box bottom above his head
+##   the same swing               1 damage to a dummy hung over him
+##   afterwards                   the ground combo is back at swing 1
 ##
 ## The timing phase swings at empty air on purpose. A swing that connects also
 ## triggers the 0.05 s hit pause, which correctly suspends the swing timer but
@@ -60,6 +63,11 @@ var _clean_durations: Array[float] = []
 var _phase: String = "timing"
 var _phase_start: int = 0
 var _air_index: int = -1
+var _up_dummy: Node2D
+var _up_box_bottom: float = 0.0
+var _up_head: float = 0.0
+var _up_index: int = -1
+var _combo_after_up: int = -1
 
 
 func _initialize() -> void:
@@ -108,6 +116,8 @@ func _physics_process(_delta: float) -> bool:
 			_run_reset()
 		"air":
 			_run_air()
+		"up":
+			_run_up(_tick - _phase_start)
 		"done":
 			quit(Support.report("test_combat", _failures))
 			return true
@@ -275,8 +285,64 @@ func _run_air() -> void:
 				not _player.is_on_floor(), true) else 1
 		_failures += 0 if Support.exact("air attack does not combo",
 				_player.is_attacking(), false) else 1
-		_phase = "done"
+		_phase = "up"
+		_phase_start = _tick
 
 
 func _room() -> Room:
 	return (_main.get_node("RoomManager") as RoomManager).get_current_room()
+
+
+## The upward swing. Aimed rather than incidental: its box has to clear the top
+## of his head, or it is just the air swing with extra steps.
+func _run_up(at: int) -> void:
+	if at == 1:
+		_up_dummy = DUMMY_SCENE.instantiate() as Node2D
+		# Hung directly over him and told not to fall, so what is measured is
+		# the reach of the swing rather than the timing of a drop.
+		_up_dummy.position = Vector2(EMPTY_GROUND.x, EMPTY_GROUND.y - 52.0)
+		_room().add_child(_up_dummy)
+		_up_dummy.gravity = 0.0
+		return
+	if at == 5:
+		_player.respawn(EMPTY_GROUND)
+		return
+	if at == 20:
+		Input.action_press("aim_up")
+		return
+	if at == 24:
+		Input.action_press("attack")
+		return
+	if at == 25:
+		Input.action_release("attack")
+		return
+	if at > 25 and at < 60 and _mace.is_active() and _up_box_bottom == 0.0:
+		var shape: CollisionShape2D = _mace.get_node("CollisionShape2D")
+		var box: RectangleShape2D = shape.shape as RectangleShape2D
+		_up_box_bottom = _mace.global_position.y + shape.position.y + box.size.y * 0.5
+		_up_head = _player.global_position.y - 28.0
+		_up_index = _player.get_swing_index()
+		return
+	if at == 60:
+		Input.action_release("aim_up")
+		return
+	if at == 70:
+		# A plain attack now: the up swing must not have advanced the combo.
+		Input.action_press("attack")
+		return
+	if at == 71:
+		Input.action_release("attack")
+		return
+	if at == 74:
+		_combo_after_up = _player.get_swing_index()
+		return
+	if at != 100:
+		return
+
+	_failures += 0 if Support.exact("Up plus attack is swing 4", _up_index, Rostam.UP_SWING) else 1
+	_failures += 0 if Support.at_most("its box clears his head",
+			_up_box_bottom, _up_head) else 1
+	_failures += 0 if Support.exact("it hits what is above him",
+			_up_dummy.max_health - _up_dummy.health, 1) else 1
+	_failures += 0 if Support.exact("the combo is back at swing 1", _combo_after_up, 0) else 1
+	_phase = "done"
