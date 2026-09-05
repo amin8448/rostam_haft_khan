@@ -66,7 +66,10 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   (Area2D) enabled for a short window. Rough timings: swing 1 and 2 about 0.25 s each, swing 3
   about 0.35 s with a bigger hitbox and more knockback. Combo resets if no input within 0.4 s
   after a swing.
-- Each swing moves Rostam a small step forward (about 12 px) so attacking feels committed.
+- Swings do not move Rostam. He plants for the duration of the swing and movement input is
+  ignored until it ends; being rooted is what makes attacking feel committed. A forward step
+  per swing was tried, both as 12 px on every hit and as a 20 px lunge on the finisher alone,
+  and cut: it suits a Hades-like game and fights the grounded feel this one wants.
 - One air attack (single swing, no combo).
 - Hit pause: freeze both attacker and target for 0.05 s on a successful hit. This is the single
   biggest contributor to "crunchy" combat; do not skip it.

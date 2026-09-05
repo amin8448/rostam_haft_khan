@@ -7,8 +7,8 @@ extends SceneTree
 ##   swing 1 wind-up / active     0.08 s / 0.08 s
 ##   swing 2 wind-up / active     0.08 s / 0.08 s
 ##   swing 3 wind-up / active     0.12 s / 0.10 s   longer, and a bigger box
-##   forward step, swings 1 and 2  0 px, planted
-##   forward step, swing 3        20 px, the finisher lunges
+##   forward step, every swing     0 px, Rostam plants
+##   planted with Right held       0 px, movement cannot drag a swing along
 ##   three swings on the dummy    3 damage, 3 health to 0
 ##   hit pause on a landed hit    0.05 s
 ##   combo after 0.4 s idle       back to swing 1
@@ -82,6 +82,8 @@ func _physics_process(_delta: float) -> bool:
 	match _phase:
 		"timing":
 			_run_timing()
+		"planted":
+			_run_planted()
 		"damage":
 			_run_damage()
 		"reset":
@@ -107,7 +109,10 @@ func _observe() -> void:
 			"windup": float(_active_start - _swing_start) / 60.0,
 			"active": float(_active_end - _active_start) / 60.0,
 			"duration": float(_tick - _swing_start) / 60.0,
-			"step": _player.global_position.x - _start_x,
+			# _prev_x, not the current x: the record closes on the tick the
+			# swing ends, and movement resumes on that very tick, which would
+			# fold one tick of re-acceleration (0.89 px) into the step.
+			"step": _prev_x - _start_x,
 		})
 		_swing_start = -1
 
@@ -158,9 +163,40 @@ func _run_timing() -> void:
 	for record in _records:
 		_clean_durations.append(record["duration"])
 	_records.clear()
-	_player.global_position = Vector2(_dummy.global_position.x - 40.0, 612.0)
-	_phase = "damage"
-	_phase_start = _tick + 15
+	_phase = "planted"
+	_phase_start = _tick + 5
+
+
+## Now that no swing steps, being rooted for the whole swing is the whole of
+## what "committed" means, so hold Right across one and check it drags him
+## nowhere. Without this, air control leaking back into ATTACK would pass every
+## other check in this file, because none of them touch the movement keys.
+func _run_planted() -> void:
+	if _tick == _phase_start:
+		Input.action_press("move_right")
+	_tap(10)
+	if _tick == _phase_start + 16:
+		_failures += 0 if Support.exact("swing survives movement input",
+				_player.is_attacking(), true) else 1
+	elif _tick == _phase_start + 40:
+		Input.action_release("move_right")
+	elif _tick == _phase_start + 60:
+		if _records.is_empty():
+			printerr("test_combat: no swing recorded in the planted phase")
+			quit(1)
+			return
+		_failures += 0 if Support.near("planted with Right held",
+				_records[0]["step"], 0.0) else 1
+		_records.clear()
+		# 20 px, not 40. With no forward step, each hit drives the dummy 13 to
+		# 16 px further out and Rostam closes none of it, so from 40 px the
+		# third swing whiffs by less than a pixel. That is real behaviour, not a
+		# test artifact; this phase is checking that the combo deals 3 damage,
+		# so it starts inside the range the combo actually holds.
+		_player.global_position = Vector2(_dummy.global_position.x - 20.0, 612.0)
+		_player.velocity = Vector2.ZERO
+		_phase = "damage"
+		_phase_start = _tick + 15
 
 
 func _run_damage() -> void:
