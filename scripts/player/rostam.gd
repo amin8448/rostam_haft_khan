@@ -47,13 +47,12 @@ const AIR_SWING: int = 3
 @export var swing_size: Array[Vector2] = [
 	Vector2(34, 24), Vector2(34, 24), Vector2(46, 32), Vector2(34, 24),
 ]
-## Forward step per swing, off on all of them. Rostam plants for the whole
-## swing: that is what makes attacking feel committed here, rather than travel.
-## A step was tried at 12 px on every swing and again as a 20 px lunge on the
-## finisher only, and both read as too Hades for this game. The exports stay so
-## it can be tried again from the Inspector without touching code.
-@export var swing_step: Array[float] = [0.0, 0.0, 0.0, 0.0]
-## Only used if a swing_step above is set back above zero.
+## Forward step per swing. The two quick swings leave Rostam planted and only
+## the finisher travels, so the third hit reads as a lunge rather than a third
+## helping of the same shuffle. A 12 px step on every swing was tried first and
+## cut. The air attack takes none, to leave the jump arc alone.
+@export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0]
+## Effectively the finisher's lunge speed: no other swing steps.
 @export var swing_step_speed: float = 120.0
 ## Gap from Rostam's centre to the near edge of the blade.
 @export var sword_reach: float = 10.0

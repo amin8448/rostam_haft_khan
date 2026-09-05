@@ -7,8 +7,9 @@ extends SceneTree
 ##   swing 1 wind-up / active     0.08 s / 0.08 s
 ##   swing 2 wind-up / active     0.08 s / 0.08 s
 ##   swing 3 wind-up / active     0.12 s / 0.10 s   longer, and a bigger box
-##   forward step, every swing     0 px, Rostam plants
-##   planted with Right held       0 px, movement cannot drag a swing along
+##   forward step, swings 1 and 2  0 px, Rostam plants
+##   forward step, swing 3        20 px, the finisher lunges
+##   planted with Right held       0 px on a quick swing
 ##   three swings on the dummy    3 damage, 3 health to 0
 ##   hit pause on a landed hit    0.05 s
 ##   combo after 0.4 s idle       back to swing 1
@@ -188,11 +189,11 @@ func _run_planted() -> void:
 		_failures += 0 if Support.near("planted with Right held",
 				_records[0]["step"], 0.0) else 1
 		_records.clear()
-		# 20 px, not 40. With no forward step, each hit drives the dummy 13 to
-		# 16 px further out and Rostam closes none of it, so from 40 px the
-		# third swing whiffs by less than a pixel. That is real behaviour, not a
-		# test artifact; this phase is checking that the combo deals 3 damage,
-		# so it starts inside the range the combo actually holds.
+		# 20 px, not 40. Each hit drives the dummy 13 to 16 px further out and
+		# only the finisher closes any of it back, so at 40 px whether the third
+		# swing connects depends on how swing_step is tuned. This phase is
+		# checking that the combo deals 3 damage, not the reach economics, so it
+		# starts inside the range the combo holds under any of those settings.
 		_player.global_position = Vector2(_dummy.global_position.x - 20.0, 612.0)
 		_player.velocity = Vector2.ZERO
 		_phase = "damage"
