@@ -1,7 +1,9 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_6xrlm"]
+[ext_resource type="Script" path="res://scripts/rooms/khan1_01_marsh.gd" id="1_6xrlm"]
 [ext_resource type="TileSet" path="res://assets/placeholder/terrain_tileset.tres" id="2_cxesj"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/jackal.tscn" id="3_jackal"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/vulture.tscn" id="4_vulture"]
 
 [node name="Khan101Marsh" type="Node2D" unique_id=1460824788]
 script = ExtResource("1_6xrlm")
@@ -13,3 +15,9 @@ tile_set = ExtResource("2_cxesj")
 
 [node name="PlayerSpawn" type="Marker2D" parent="." unique_id=639494901]
 position = Vector2(144, 612)
+
+[node name="Jackal" parent="." instance=ExtResource("3_jackal")]
+position = Vector2(1760, 564)
+
+[node name="Vulture" parent="." instance=ExtResource("4_vulture")]
+position = Vector2(1392, 500)
