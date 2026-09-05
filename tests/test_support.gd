@@ -8,6 +8,8 @@ extends RefCounted
 ## A measurement counts as a miss when it is more than this far off the design
 ## target, as a fraction of the target.
 const TOLERANCE: float = 0.1
+## One physics tick at the project's 60 Hz.
+const PHYSICS_TICK: float = 1.0 / 60.0
 
 
 ## Compares a measured number against a design target. A target of zero is
@@ -19,6 +21,18 @@ static func near(label: String, measured: float, target: float, unit: String = "
 	else:
 		ok = absf(measured - target) / absf(target) <= TOLERANCE
 	print("%s  %-28s measured %9.2f %-4s target %9.2f" % [_mark(ok), label, measured, unit, target])
+	return ok
+
+
+## For timings, which are quantised to the physics tick and so cannot be
+## measured more finely than one. For a short window one tick is already wider
+## than 10%, which would make the plain rule unsatisfiable however correct the
+## code is, so the tolerance is the larger of the two.
+static func near_time(label: String, measured: float, target: float) -> bool:
+	var allowed: float = maxf(absf(target) * TOLERANCE, PHYSICS_TICK)
+	var ok: bool = absf(measured - target) <= allowed
+	print("%s  %-28s measured %9.4f s    target %9.4f  (+/- %.4f)"
+			% [_mark(ok), label, measured, target, allowed])
 	return ok
 
 

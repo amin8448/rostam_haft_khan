@@ -86,6 +86,7 @@ var _flicker_timer: float = 0.0
 
 @onready var _visuals: Node2D = $Visuals
 @onready var _sword: Hitbox = $Visuals/SwordHitbox
+@onready var _hurtbox: Area2D = $Hurtbox
 
 
 func _ready() -> void:
@@ -150,6 +151,10 @@ func is_attacking() -> bool:
 	return state == State.ATTACK
 
 
+func is_hit_paused() -> bool:
+	return _hit_pause_timer > 0.0
+
+
 func is_invulnerable() -> bool:
 	return _invuln_timer > 0.0
 
@@ -173,6 +178,9 @@ func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
 		velocity = Vector2.ZERO
 		_invuln_timer = 0.0
 		_visuals.visible = true
+		# A corpse is not a target. This also drops the overlap with whatever
+		# killed him, which matters on respawn: see below.
+		_hurtbox.monitorable = false
 		died.emit()
 		return true
 
@@ -209,6 +217,15 @@ func respawn(at: Vector2) -> void:
 	_sword.deactivate()
 	_visuals.visible = true
 	_visuals.scale.x = 1.0
+
+	# Teleporting does not move the hurtbox in the physics broadphase until the
+	# next step, so the hazard he died on still reported an overlap and landed a
+	# free hit the moment he respawned, half a room away. Push the transform
+	# through before the hurtbox becomes a target again.
+	force_update_transform()
+	_hurtbox.force_update_transform()
+	_hurtbox.monitorable = true
+
 	health_changed.emit(health, max_health)
 
 

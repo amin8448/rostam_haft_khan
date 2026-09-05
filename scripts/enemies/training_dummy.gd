@@ -63,6 +63,10 @@ func apply_hit_pause(duration: float) -> void:
 	_hit_pause_timer = maxf(_hit_pause_timer, duration)
 
 
+func is_hit_paused() -> bool:
+	return _hit_pause_timer > 0.0
+
+
 func is_alive() -> bool:
 	return health > 0
 
@@ -82,4 +86,10 @@ func reset() -> void:
 ## tree so it can come back without being re-instanced.
 func _set_present(present: bool) -> void:
 	_visuals.visible = present
+	# Same reason as Rostam's respawn: the broadphase does not know it moved
+	# back to its home until the next step, so push the transform through before
+	# it can be hit again.
+	if present:
+		force_update_transform()
+		_hurtbox.force_update_transform()
 	_hurtbox.monitorable = present
