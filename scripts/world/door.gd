@@ -15,7 +15,11 @@ signal entered(door: Door)
 @export_file("*.tscn") var target_room: String = ""
 ## Name of the Marker2D to arrive on in the target room.
 @export var target_entry: StringName = &"EntryWest"
-## A locked door does nothing and draws darker. Nothing unlocks one yet.
+## The far door of the den. It ends the slice rather than loading a room, so it
+## is the one door with no target.
+@export var ends_slice: bool = false
+## A locked door does nothing and draws darker. The den's doors are unlocked by
+## the arena when the fight is over.
 @export var locked: bool = false:
 	set(value):
 		locked = value
@@ -32,7 +36,7 @@ func _ready() -> void:
 
 
 func is_usable() -> bool:
-	return not locked and not target_room.is_empty()
+	return not locked and (ends_slice or not target_room.is_empty())
 
 
 func _on_body_entered(body: Node2D) -> void:

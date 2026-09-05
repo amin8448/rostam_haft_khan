@@ -26,6 +26,7 @@ signal room_entered(room: Room)
 @export var fade_path: NodePath = ^"../FadeLayer/Fade"
 @export var banner_path: NodePath = ^"../RoomBanner"
 @export var boss_bar_path: NodePath = ^"../BossBar"
+@export var complete_screen_path: NodePath = ^"../CompleteScreen"
 
 var _room: Room
 var _room_path: String = ""
@@ -46,9 +47,15 @@ var _respawn_position: Vector2 = Vector2.ZERO
 @onready var _fade: ColorRect = get_node_or_null(fade_path) as ColorRect
 @onready var _banner: CanvasLayer = get_node_or_null(banner_path) as CanvasLayer
 @onready var _boss_bar: CanvasLayer = get_node_or_null(boss_bar_path) as CanvasLayer
+@onready var _complete: CanvasLayer = get_node_or_null(complete_screen_path) as CanvasLayer
 
 
 ## Called by main once the player's signals are wired.
+func _ready() -> void:
+	if _complete != null and _complete.has_signal("restart_requested"):
+		_complete.restart_requested.connect(restart)
+
+
 func start() -> void:
 	enter_room(starting_room, starting_entry)
 	_respawn_room = starting_room
@@ -118,6 +125,9 @@ func hide_boss() -> void:
 func on_door_entered(door: Door) -> void:
 	if _busy or not door.is_usable():
 		return
+	if door.ends_slice:
+		_finish_slice()
+		return
 	_busy = true
 
 	# Section 7: Rostam keeps his velocity through a door.
@@ -132,6 +142,41 @@ func on_door_entered(door: Door) -> void:
 		_player.velocity = carried)
 	tween.tween_property(_fade, "color:a", 0.0, fade_time)
 	tween.tween_callback(_finish)
+
+
+## Section 8's ending. The screen paints its own black, so the fade is cleared
+## once it is up rather than sitting over it.
+func _finish_slice() -> void:
+	if _complete == null:
+		return
+	_busy = true
+	if _player.has_method("set_pinned"):
+		_player.set_pinned(true)
+	var tween: Tween = create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, fade_time)
+	tween.tween_callback(func() -> void:
+		hide_boss()
+		_complete.show_screen()
+		_fade.color.a = 0.0
+		_busy = false)
+
+
+## Back to the start with nothing carried over. No save system: room 5 is
+## re-instanced on the way back through, so the Lion is alive again.
+func restart() -> void:
+	if _complete != null:
+		_complete.hide_screen()
+	_busy = false
+	enter_room(starting_room, starting_entry)
+	_respawn_room = starting_room
+	_respawn_position = _room.get_entry(starting_entry)
+	if _player.has_method("set_pinned"):
+		_player.set_pinned(false)
+	_player.respawn(_respawn_position)
+
+
+func is_slice_complete() -> bool:
+	return _complete != null and _complete.has_method("is_showing") and _complete.is_showing()
 
 
 func on_player_died() -> void:
