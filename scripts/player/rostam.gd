@@ -47,9 +47,13 @@ const AIR_SWING: int = 3
 @export var swing_size: Array[Vector2] = [
 	Vector2(34, 24), Vector2(34, 24), Vector2(46, 32), Vector2(34, 24),
 ]
-## Forward step per swing, so attacking feels committed. The air attack gets
-## none of it, to leave the jump arc alone.
-@export var swing_step: Array[float] = [12.0, 12.0, 12.0, 0.0]
+## Forward step per swing. The two quick swings leave Rostam planted and only
+## the finisher travels, so the third hit reads as a lunge rather than as a
+## third helping of the same shuffle. The air attack takes none, to leave the
+## jump arc alone. Setting all of them to 0 gives the Hollow Knight model.
+@export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0]
+## Speed of that step. With only the finisher stepping, this is effectively the
+## lunge speed and nothing else uses it.
 @export var swing_step_speed: float = 120.0
 ## Gap from Rostam's centre to the near edge of the blade.
 @export var sword_reach: float = 10.0

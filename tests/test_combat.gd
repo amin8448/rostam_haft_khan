@@ -7,7 +7,8 @@ extends SceneTree
 ##   swing 1 wind-up / active     0.08 s / 0.08 s
 ##   swing 2 wind-up / active     0.08 s / 0.08 s
 ##   swing 3 wind-up / active     0.12 s / 0.10 s   longer, and a bigger box
-##   forward step per swing       12 px
+##   forward step, swings 1 and 2  0 px, planted
+##   forward step, swing 3        20 px, the finisher lunges
 ##   three swings on the dummy    3 damage, 3 health to 0
 ##   hit pause on a landed hit    0.05 s
 ##   combo after 0.4 s idle       back to swing 1
