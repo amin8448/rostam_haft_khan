@@ -16,8 +16,10 @@ scope, controls and feel.
 - Renderer: GL Compatibility (already set in project.godot). Keep it.
 - The developer works on two machines (Ubuntu laptop, Windows desktop) and syncs through
   GitHub. Never write machine-specific paths or settings into the project.
-- Godot is expected on PATH as `godot` (the console build). If it is not, say so and stop
-  claiming anything is validated. Never write the path to the Godot binary into the project.
+- Godot is on PATH as `godot` (main build; `godot_console` is the console wrapper, only
+  needed for interactive use). Both pipe output correctly for scripted validation. If
+  `godot` is not found, say so and stop claiming anything is validated. Never write the path
+  to the Godot binary into the project.
 - You cannot see the game. Playtesting is done by the developer. What you can do is drive
   it headless and measure it (see Validation and Tests). Every session ends with a "How to
   test" section (see Workflow).

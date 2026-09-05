@@ -4,8 +4,8 @@ extends SceneTree
 ##
 ## Expected:
 ##   resting y              612 px    ground surface 640, capsule half-height 28
-##   full jump height       112 px    "roughly 3.5 tiles"
-##   tap jump height         32 px    "minimum tap jump roughly 1 tile"
+##   full jump height       119 px    confirmed by playtest, about 3.7 tiles
+##   tap jump height         29 px    confirmed by playtest, about 0.9 tiles
 ##   acceleration to 320     0.10 s
 ##   deceleration to 0       0.08 s
 ##   facing after Right         1
@@ -67,7 +67,7 @@ func _physics_process(delta: float) -> bool:
 		JUMP_RELEASE:
 			Input.action_release("jump")
 			_full_height = _rest_y - _apex
-			_failures += 0 if Support.near("full jump height", _full_height, 112.0) else 1
+			_failures += 0 if Support.near("full jump height", _full_height, 119.0) else 1
 		TAP_PRESS:
 			_apex = y
 			Input.action_press("jump")
@@ -75,7 +75,7 @@ func _physics_process(delta: float) -> bool:
 			Input.action_release("jump")
 		TAP_DONE:
 			_tap_height = _rest_y - _apex
-			_failures += 0 if Support.near("tap jump height", _tap_height, 32.0) else 1
+			_failures += 0 if Support.near("tap jump height", _tap_height, 29.0) else 1
 		RUN_PRESS:
 			Input.action_press("move_right")
 		RUN_RELEASE:

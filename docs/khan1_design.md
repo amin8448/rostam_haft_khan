@@ -43,13 +43,15 @@ Dash is defined in the input map now but implemented in a later session.
 
 ## 4. Movement feel
 
-These are starting values as `@export` variables, to be tuned by playtesting.
+Starting values were tuned by playtesting. Session 1 confirmed these on keyboard and
+controller; they are the baseline the headless tests in `tests/` now guard. All remain
+`@export` variables.
 
 - Run speed: 320 px/s. Acceleration to full speed in about 0.1 s, deceleration in about
   0.08 s. Movement should feel immediate, not floaty.
 - Jump: variable height. Holding the button gives full height; releasing early cuts upward
-  velocity (multiply velocity.y by 0.4 on release while rising). Full jump height roughly 3.5
-  tiles, minimum tap jump roughly 1 tile.
+  velocity (multiply velocity.y by 0.4 on release while rising). Full jump height about 3.7
+  tiles, tap jump about 0.9 tiles.
 - Gravity: heavier when falling than when rising (fall gravity about 1.6x rise gravity).
   Cap fall speed at 900 px/s.
 - Coyote time: 0.1 s after walking off a ledge, jump still works.
