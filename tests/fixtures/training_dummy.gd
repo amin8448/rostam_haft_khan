@@ -2,7 +2,7 @@ extends Enemy
 
 ## Test fixture. A stationary target for the combat tests: no AI, no attacks and
 ## no contact damage, so it can be stood next to safely and the only thing under
-## measurement is Rostam's sword.
+## measurement is Rostam's mace.
 ##
 ## No class_name on purpose: fixtures must not register globals into the shipped
 ## game. Tests reach it by instantiating this scene.

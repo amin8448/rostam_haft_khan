@@ -17,7 +17,7 @@ extends SceneTree
 ##
 ## The timing phase swings at empty air on purpose. A swing that connects also
 ## triggers the 0.05 s hit pause, which correctly suspends the swing timer but
-## leaves the blade on screen, so a hitting swing measures about four ticks
+## leaves the mace head on screen, so a hitting swing measures about four ticks
 ## wider than its active window. Timing and damage have to be measured
 ## separately or the first is just measuring the second.
 ##
@@ -35,14 +35,14 @@ const DUMMY_SCENE: PackedScene = preload("res://tests/fixtures/training_dummy.ts
 ## what khan1_01_marsh happens to contain.
 const DUMMY_POSITION: Vector2 = Vector2(400, 618)
 ## Far enough from the dummy that a swing here reaches nothing: the longest
-## blade ends 56 px from Rostam's centre, and the dummy starts 386 px out.
+## mace head ends 56 px from Rostam's centre, and the dummy starts 386 px out.
 const EMPTY_GROUND: Vector2 = Vector2(200, 612)
 ## High enough that a full air swing plus a second attempt both fit before
 ## landing resets the one-air-attack rule.
 const HIGH_AIR: Vector2 = Vector2(300, 150)
 
 var _player: Rostam
-var _sword: Hitbox
+var _mace: Hitbox
 var _dummy: Node2D
 var _tick: int = 0
 var _failures: int = 0
@@ -65,7 +65,7 @@ func _initialize() -> void:
 	var main: Node = (load("res://scenes/world/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	_player = main.get_node("Rostam") as Rostam
-	_sword = _player.get_node("Visuals/SwordHitbox") as Hitbox
+	_mace = _player.get_node("Visuals/MaceHitbox") as Hitbox
 	_dummy = DUMMY_SCENE.instantiate() as Node2D
 	# position, not global_position, and before add_child: Enemy._ready records
 	# its home on entering the tree, and reset() would otherwise send it to the
@@ -137,9 +137,9 @@ func _observe() -> void:
 		_active_end = -1
 
 	if _swing_start >= 0:
-		if _sword.is_active() and _active_start < 0:
+		if _mace.is_active() and _active_start < 0:
 			_active_start = _tick
-		elif not _sword.is_active() and _active_start >= 0 and _active_end < 0:
+		elif not _mace.is_active() and _active_start >= 0 and _active_end < 0:
 			_active_end = _tick
 
 	_prev_x = _player.global_position.x
@@ -228,7 +228,7 @@ func _run_damage() -> void:
 		return
 	var stretched: float = _records[0]["duration"] - _clean_durations[0]
 	_failures += 0 if Support.near_time("hit pause stretches a swing",
-			stretched, _sword.hit_pause) else 1
+			stretched, _mace.hit_pause) else 1
 
 	_records.clear()
 	_phase = "reset"

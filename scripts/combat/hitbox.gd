@@ -25,7 +25,7 @@ signal hit_landed(target: Node2D)
 	set(value):
 		size = value
 		_apply_size()
-## Where the box sits relative to the body. A sword reaches forward; a hazard
+## Where the box sits relative to the body. A mace reaches forward; a hazard
 ## sits centred on itself.
 @export var offset: Vector2 = Vector2.ZERO:
 	set(value):
@@ -37,17 +37,21 @@ signal hit_landed(target: Node2D)
 ## The node this hitbox belongs to. Reported as the source of the hit and used
 ## as the origin knockback pushes away from.
 @export var body_path: NodePath = ^".."
+## Optional child drawn only while the box is open, so the active window is
+## visible on screen. Rostam's mace head uses it; a hazard names its visual
+## something else and simply has none.
+@export var visual_path: NodePath = ^"MaceHead"
 
 var _body: Node2D
 var _shape: CollisionShape2D
-var _blade: Polygon2D
+var _visual: Polygon2D
 var _already_hit: Array[Node] = []
 
 
 func _ready() -> void:
 	_body = get_node_or_null(body_path) as Node2D
 	_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
-	_blade = get_node_or_null("Blade") as Polygon2D
+	_visual = get_node_or_null(visual_path) as Polygon2D
 	if _shape != null and _shape.shape is RectangleShape2D:
 		# Duplicate so resizing per swing cannot mutate a shared resource.
 		_shape.shape = _shape.shape.duplicate()
@@ -72,15 +76,15 @@ func _physics_process(_delta: float) -> void:
 func activate() -> void:
 	_already_hit.clear()
 	monitoring = true
-	if _blade != null:
-		_blade.visible = true
+	if _visual != null:
+		_visual.visible = true
 
 
 func deactivate() -> void:
 	monitoring = false
 	_already_hit.clear()
-	if _blade != null:
-		_blade.visible = false
+	if _visual != null:
+		_visual.visible = false
 
 
 func is_active() -> bool:
@@ -101,7 +105,7 @@ func _try_hit(area: Area2D) -> void:
 	_pause(target)
 
 
-## Knockback pushes away from the attacking body, which is right for a sword
+## Knockback pushes away from the attacking body, which is right for a mace
 ## (the target is in front) and for a hazard (the target is standing on it)
 ## without either needing to know about the other.
 func _knockback_for(target: Node2D) -> Vector2:
@@ -126,10 +130,10 @@ func _apply_size() -> void:
 	if _shape != null and _shape.shape is RectangleShape2D:
 		(_shape.shape as RectangleShape2D).size = size
 		_shape.position = offset
-	if _blade == null:
+	if _visual == null:
 		return
 	var half: Vector2 = size * 0.5
-	_blade.polygon = PackedVector2Array([
+	_visual.polygon = PackedVector2Array([
 		offset + Vector2(-half.x, -half.y),
 		offset + Vector2(half.x, -half.y),
 		offset + Vector2(half.x, half.y),

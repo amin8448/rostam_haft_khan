@@ -44,7 +44,7 @@ const AIR_SWING: int = 3
 @export var swing_duration: Array[float] = [0.25, 0.25, 0.35, 0.25]
 ## Delay before the hitbox opens, so the swing has a wind-up to read.
 @export var swing_windup: Array[float] = [0.08, 0.08, 0.12, 0.08]
-## How long the hitbox stays open. The blade rectangle is visible for exactly
+## How long the hitbox stays open. The mace head is visible for exactly
 ## this window, so the timing can be tuned by eye.
 @export var swing_active: Array[float] = [0.08, 0.08, 0.10, 0.08]
 @export var swing_damage: Array[int] = [1, 1, 1, 1]
@@ -61,13 +61,13 @@ const AIR_SWING: int = 3
 @export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0]
 ## Effectively the finisher's lunge speed: no other swing steps.
 @export var swing_step_speed: float = 120.0
-## Gap from Rostam's centre to the near edge of the blade.
-@export var sword_reach: float = 10.0
-## Height of the blade relative to Rostam's centre, positive being lower. It
+## Gap from Rostam's centre to the near edge of the mace head.
+@export var mace_reach: float = 10.0
+## Height of the mace head relative to Rostam's centre, positive being lower. It
 ## hangs below centre rather than at chest height because ground enemies are
-## low: the Jackal is a 24 px slab, and a chest-height blade cleared all but
+## low: the Jackal is a 24 px slab, and a chest-height swing cleared all but
 ## 4 px of it, which whiffs the moment either of them is nudged.
-@export var sword_height: float = 6.0
+@export var mace_height: float = 6.0
 ## No further attack input within this long after a swing and the combo drops
 ## back to the first hit.
 @export var combo_reset_time: float = 0.4
@@ -101,7 +101,7 @@ var _facing_candidate: int = 0
 var _facing_hold: int = 0
 
 @onready var _visuals: Node2D = $Visuals
-@onready var _sword: Hitbox = $Visuals/SwordHitbox
+@onready var _mace: Hitbox = $Visuals/MaceHitbox
 @onready var _hurtbox: Area2D = $Hurtbox
 
 
@@ -151,7 +151,7 @@ func _physics_process(delta: float) -> void:
 	_update_state(input_x)
 
 
-## Anything that reads facing (the camera's look-ahead, the sword) goes through
+## Anything that reads facing (the camera's look-ahead, the mace) goes through
 ## this rather than reaching into the node.
 func get_facing() -> int:
 	return facing
@@ -232,7 +232,7 @@ func respawn(at: Vector2) -> void:
 	_facing_candidate = 0
 	_facing_hold = 0
 
-	_sword.deactivate()
+	_mace.deactivate()
 	_visuals.visible = true
 	_visuals.scale.x = 1.0
 
@@ -248,7 +248,7 @@ func respawn(at: Vector2) -> void:
 
 
 func _cancel_swing() -> void:
-	_sword.deactivate()
+	_mace.deactivate()
 	_step_remaining = 0.0
 	_attack_buffered = false
 
@@ -308,12 +308,12 @@ func _start_swing(index: int) -> void:
 	_step_remaining = _swing_f(swing_step, index)
 	state = State.ATTACK
 
-	_sword.damage = _swing_i(swing_damage, index)
-	_sword.knockback_speed = _swing_f(swing_knockback, index)
+	_mace.damage = _swing_i(swing_damage, index)
+	_mace.knockback_speed = _swing_f(swing_knockback, index)
 	var box: Vector2 = _swing_v2(swing_size, index)
-	_sword.size = box
-	_sword.offset = Vector2(sword_reach + box.x * 0.5, sword_height)
-	_sword.deactivate()
+	_mace.size = box
+	_mace.offset = Vector2(mace_reach + box.x * 0.5, mace_height)
+	_mace.deactivate()
 
 
 func _update_swing(delta: float) -> void:
@@ -322,11 +322,11 @@ func _update_swing(delta: float) -> void:
 	var windup: float = _swing_f(swing_windup, _swing_index)
 	var open: bool = _swing_timer >= windup \
 			and _swing_timer < windup + _swing_f(swing_active, _swing_index)
-	if open != _sword.is_active():
+	if open != _mace.is_active():
 		if open:
-			_sword.activate()
+			_mace.activate()
 		else:
-			_sword.deactivate()
+			_mace.deactivate()
 
 	# Pressing attack mid-swing chains into the next one the moment this ends,
 	# rather than being dropped for being early.
@@ -338,7 +338,7 @@ func _update_swing(delta: float) -> void:
 
 
 func _end_swing() -> void:
-	_sword.deactivate()
+	_mace.deactivate()
 	_combo_timer = combo_reset_time
 	state = State.FALL if not is_on_floor() else State.IDLE
 

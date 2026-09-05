@@ -62,6 +62,7 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
 
 ## 5. Combat feel
 
+- Rostam fights with the gorz, the ox-headed mace of the Shahnameh, not a sword.
 - Three-hit ground combo on repeated `attack` presses. Each swing is a separate hitbox
   (Area2D) enabled for a short window. Rough timings: swing 1 and 2 about 0.25 s each, swing 3
   about 0.35 s with a bigger hitbox and more knockback. Combo resets if no input within 0.4 s
@@ -156,8 +157,8 @@ that always connects. Scripted sequence:
 ## 9. Placeholder art
 
 Colored shapes only, per the color code in CLAUDE.md. Terrain is a single solid tile. Rostam
-is a blue capsule with a small lighter rectangle for the sword during swings, so the player
-can see the hitbox. Enemies are red rectangles. The Lion is an orange rectangle. Rakhsh is a
+is a blue capsule with a small lighter rectangle for the gorz head during swings, so the
+player can see the hitbox. Enemies are red rectangles. The Lion is an orange rectangle. Rakhsh is a
 white rectangle. Telegraphs are shown by a quick color flash (lighter shade) before the
 attack, so timing is readable without animation.
 

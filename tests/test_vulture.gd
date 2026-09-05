@@ -18,10 +18,10 @@ extends SceneTree
 ## matter of play skill and is not what this check is for.
 ##
 ## It swings from 45 px to the side, not from underneath. Rostam's head reaches
-## 22 px higher than his blade does, so jumping straight up into the Vulture
-## puts his hurtbox into its contact box before the sword arrives: he takes the
+## 22 px higher than his mace does, so jumping straight up into the Vulture
+## puts his hurtbox into its contact box before the mace arrives: he takes the
 ## hit, the knockback replaces his rise, and the stun swallows the attack input.
-## 45 px clears the two bodies (12 + 18 = 30) while leaving the blade, which
+## 45 px clears the two bodies (12 + 18 = 30) while leaving the mace, which
 ## reaches 44 px, well inside it.
 
 const Support = preload("res://tests/test_support.gd")
@@ -183,7 +183,7 @@ func _run_kill() -> void:
 		_phase = "done"
 
 
-## One air attack per jump, swung on the way up so the blade is open near the
+## One air attack per jump, swung on the way up so the mace head is open near the
 ## apex where the Vulture sits.
 func _swing(since: int) -> void:
 	if since == 14:

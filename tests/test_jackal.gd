@@ -11,12 +11,12 @@ extends SceneTree
 ##   Rostam level and near       lunges
 ##   Rostam on the platform above  does not lunge, 112 px is not "roughly level"
 ##   contact                     exactly 1 damage
-##   three sword hits            3 health to 0
+##   three mace hits            3 health to 0
 ##   Room.reset()                back at its start with full health
 ##
 ## Two phases pin the Jackal down by zeroing its own exports: the wall test sets
 ## detect_range to 0 so Rostam standing at the room spawn nearby cannot start a
-## lunge instead, and the sword phase sets patrol_speed to 0 so it holds still
+## lunge instead, and the mace phase sets patrol_speed to 0 so it holds still
 ## while being hit. Both are stated where they happen.
 
 const Support = preload("res://tests/test_support.gd")
@@ -86,8 +86,8 @@ func _physics_process(_delta: float) -> bool:
 			_run_telegraph()
 		"contact":
 			_run_contact()
-		"sword":
-			_run_sword()
+		"mace":
+			_run_mace()
 		"reset":
 			_run_reset()
 		"done":
@@ -193,11 +193,11 @@ func _run_contact() -> void:
 	elif _tick == _phase_start + 120:
 		_failures += 0 if Support.exact("contact costs exactly 1", _contact_loss, 1) else 1
 
-		_phase = "sword"
+		_phase = "mace"
 		_phase_start = _tick
 
 
-func _run_sword() -> void:
+func _run_mace() -> void:
 	var at: int = _tick - _phase_start
 	if at == 1:
 		# Pin it. Standing on it during the contact phase left it mid-lunge, and
@@ -223,7 +223,7 @@ func _run_sword() -> void:
 	if at != 110:
 		return
 
-	_failures += 0 if Support.exact("three sword hits kill it", _jackal.health, 0) else 1
+	_failures += 0 if Support.exact("three mace hits kill it", _jackal.health, 0) else 1
 	_failures += 0 if Support.exact("dead Jackal is gone", _jackal.is_alive(), false) else 1
 	_player.respawn(FAR_AWAY)
 	_room.reset()
