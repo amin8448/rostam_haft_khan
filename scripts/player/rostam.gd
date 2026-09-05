@@ -87,6 +87,14 @@ const AIR_SWING: int = 3
 ## something you can run straight through.
 @export var control_loss_time: float = 0.15
 
+@export_group("Boss")
+## Section 5's small self recoil on hitting a boss. How hard depends on what was
+## hit: the target reports it, so nothing here knows what a boss is.
+@export var recoil_time: float = 0.15
+@export var recoil_friction: float = 900.0
+## How far the visuals jitter while pinned in the Lion's phase 2.
+@export var struggle_amount: float = 2.0
+
 var health: int = 5
 var state: State = State.IDLE
 var facing: int = 1
@@ -103,6 +111,8 @@ var _air_attack_used: bool = false
 var _invuln_timer: float = 0.0
 var _control_timer: float = 0.0
 var _flicker_timer: float = 0.0
+var _recoil_timer: float = 0.0
+var _pinned: bool = false
 var _facing_candidate: int = 0
 var _facing_hold: int = 0
 
@@ -114,10 +124,22 @@ var _facing_hold: int = 0
 func _ready() -> void:
 	health = max_health
 	health_changed.emit(health, max_health)
+	_mace.hit_landed.connect(_on_mace_hit)
 
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
+		return
+
+	# Pinned: the phase 2 sequence owns him. No input, no attack, no dying, and
+	# a small shake in place so it reads as a struggle rather than a freeze.
+	if _pinned:
+		_visuals.position = Vector2(
+			randf_range(-struggle_amount, struggle_amount),
+			randf_range(-struggle_amount, struggle_amount))
+		velocity.x = 0.0
+		_apply_gravity(delta)
+		move_and_slide()
 		return
 
 	# Hit pause freezes this body only. The camera keeps running, which is the
@@ -185,10 +207,26 @@ func is_dead() -> bool:
 	return state == State.DEAD
 
 
+func is_pinned() -> bool:
+	return _pinned
+
+
+## Locks control for a scripted moment. Invulnerable while it lasts, so the
+## sequence cannot be interrupted by whatever was already in flight.
+func set_pinned(pinned: bool) -> void:
+	_pinned = pinned
+	if pinned:
+		_cancel_swing()
+		velocity = Vector2.ZERO
+		state = State.IDLE
+	else:
+		_visuals.position = Vector2.ZERO
+
+
 ## Returns true only when damage was actually applied, so the attacker can tell
 ## a real hit from one absorbed by invulnerability.
 func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
-	if amount <= 0 or state == State.DEAD or _invuln_timer > 0.0:
+	if amount <= 0 or state == State.DEAD or _invuln_timer > 0.0 or _pinned:
 		return false
 
 	health = maxi(health - amount, 0)
@@ -244,6 +282,9 @@ func respawn(at: Vector2) -> void:
 	_step_remaining = 0.0
 	_attack_buffered = false
 	_air_attack_used = false
+	_recoil_timer = 0.0
+	_pinned = false
+	_visuals.position = Vector2.ZERO
 	_facing_candidate = 0
 	_facing_hold = 0
 
@@ -367,6 +408,12 @@ func _apply_attack_motion(delta: float) -> void:
 	if not is_on_floor():
 		# Keep the existing arc: an air swing should not stall a jump.
 		return
+	if _recoil_timer > 0.0:
+		# Riding the recoil off a boss. Without this the swing would zero it on
+		# the very next tick and the recoil would never be felt.
+		_recoil_timer -= delta
+		velocity.x = move_toward(velocity.x, 0.0, recoil_friction * delta)
+		return
 	if _step_remaining > 0.0 and delta > 0.0:
 		var move: float = minf(swing_step_speed * delta, _step_remaining)
 		_step_remaining -= move
@@ -462,3 +509,15 @@ func _swing_i(values: Array[int], index: int) -> int:
 
 func _swing_v2(values: Array[Vector2], index: int) -> Vector2:
 	return Vector2.ZERO if values.is_empty() else values[clampi(index, 0, values.size() - 1)]
+
+
+## Section 5's self recoil. The target says how hard it shoves back, so a Jackal
+## reports nothing and the Lion reports a real number.
+func _on_mace_hit(target: Node2D) -> void:
+	if target == null or not target.has_method("get_attacker_recoil"):
+		return
+	var recoil: float = target.get_attacker_recoil()
+	if recoil <= 0.0:
+		return
+	velocity.x = -float(facing) * recoil
+	_recoil_timer = recoil_time

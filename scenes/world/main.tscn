@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/rostam.tscn" id="2_rostam"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/health_hud.tscn" id="4_hud"]
 [ext_resource type="Script" path="res://scripts/world/room_manager.gd" id="5_manager"]
 [ext_resource type="PackedScene" path="res://scenes/ui/room_banner.tscn" id="6_banner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_bar.tscn" id="7_bossbar"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -20,6 +21,8 @@ script = ExtResource("3_camera")
 [node name="HealthHud" parent="." instance=ExtResource("4_hud")]
 
 [node name="RoomBanner" parent="." instance=ExtResource("6_banner")]
+
+[node name="BossBar" parent="." instance=ExtResource("7_bossbar")]
 
 [node name="FadeLayer" type="CanvasLayer" parent="."]
 layer = 10

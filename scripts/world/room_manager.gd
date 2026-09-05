@@ -25,6 +25,7 @@ signal room_entered(room: Room)
 @export var camera_path: NodePath = ^"../GameCamera"
 @export var fade_path: NodePath = ^"../FadeLayer/Fade"
 @export var banner_path: NodePath = ^"../RoomBanner"
+@export var boss_bar_path: NodePath = ^"../BossBar"
 
 var _room: Room
 var _room_path: String = ""
@@ -44,6 +45,7 @@ var _respawn_position: Vector2 = Vector2.ZERO
 @onready var _camera: GameCamera = get_node(camera_path) as GameCamera
 @onready var _fade: ColorRect = get_node_or_null(fade_path) as ColorRect
 @onready var _banner: CanvasLayer = get_node_or_null(banner_path) as CanvasLayer
+@onready var _boss_bar: CanvasLayer = get_node_or_null(boss_bar_path) as CanvasLayer
 
 
 ## Called by main once the player's signals are wired.
@@ -88,6 +90,29 @@ func on_rested(ground: GrazingGround) -> void:
 func set_respawn(room_path: String, position: Vector2) -> void:
 	_respawn_room = room_path
 	_respawn_position = position
+
+
+## Banner and boss bar passthroughs, so a room never has to find the UI.
+func show_text(text: String) -> void:
+	if _banner != null and _banner.has_method("show_text"):
+		_banner.show_text(text)
+
+
+func show_boss(current: int, maximum: int) -> void:
+	if _boss_bar == null:
+		return
+	_boss_bar.set_health(current, maximum)
+	_boss_bar.show_bar()
+
+
+func set_boss_health(current: int, maximum: int) -> void:
+	if _boss_bar != null:
+		_boss_bar.set_health(current, maximum)
+
+
+func hide_boss() -> void:
+	if _boss_bar != null:
+		_boss_bar.hide_bar()
 
 
 func on_door_entered(door: Door) -> void:
@@ -159,8 +184,8 @@ func enter_room(path: String, entry: StringName) -> void:
 	# the level behind the fade.
 	_camera.set_target(_player)
 
-	if _banner != null and _banner.has_method("show_text"):
-		_banner.show_text(_room.entry_text)
+	hide_boss()
+	show_text(_room.entry_text)
 	room_entered.emit(_room)
 
 
@@ -178,6 +203,11 @@ func _load(path: String) -> void:
 	_room = scene.instantiate() as Room
 	_room_path = path
 	_rooms.add_child(_room)
+
+	# A room that wants to reach the banner or the boss bar says so by having
+	# on_loaded; most rooms do not.
+	if _room.has_method("on_loaded"):
+		_room.on_loaded(self)
 
 	for door in _find_nodes(_room, "Door"):
 		(door as Door).entered.connect(on_door_entered)

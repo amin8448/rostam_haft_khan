@@ -29,6 +29,13 @@ const PLAYER_GROUP: StringName = &"player"
 ## driving its own movement. Without it the AI overwrites velocity on the very
 ## next tick and the knockback never reads at all.
 @export var stagger_time: float = 0.18
+## How hard this thing shoves back whoever hits it. Section 5 asks for a small
+## self recoil when Rostam hits a boss; everything else leaves it at zero, and
+## the attacker asks rather than anything needing to know what a boss is.
+@export var attacker_recoil: float = 0.0
+## A beaten boss stays on screen to be thrown across the room. Ordinary enemies
+## vanish.
+@export var hide_on_death: bool = true
 
 var health: int = 0
 
@@ -109,6 +116,10 @@ func is_staggered() -> bool:
 	return _stagger_timer > 0.0
 
 
+func get_attacker_recoil() -> float:
+	return attacker_recoil
+
+
 func get_home() -> Vector2:
 	return _home
 
@@ -178,7 +189,7 @@ func _drift(delta: float) -> void:
 ## contact damage, but stays in the tree so reset() can bring it back without
 ## re-instancing it.
 func _set_present(present: bool) -> void:
-	_visuals.visible = present
+	_visuals.visible = present or not hide_on_death
 	if present:
 		# The broadphase does not know it moved back to its home until the next
 		# step, so push the transform through before it can be hit or hit back.

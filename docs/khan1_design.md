@@ -81,7 +81,9 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   small knockback away from the source, brief control loss (0.15 s).
 - Death: fade to black, respawn at the room entrance of the current room, enemies reset.
   No death penalty in this slice.
-- Simple HUD: five health pips top-left. Nothing else yet.
+- Simple HUD: five health pips top-left, and nothing else outside the boss arena. The
+  Lion is the one exception: 30 health is unreadable without a bar, so a plain one
+  appears for the fight only, running orange to red to dark red as it is worn down.
 
 ## 6. Enemies
 
