@@ -208,6 +208,15 @@ func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
 	return true
 
 
+## Refills health without moving him or clearing anything else. Resting at a
+## grazing ground uses this; dying uses respawn().
+func heal_full() -> void:
+	if state == State.DEAD or health == max_health:
+		return
+	health = max_health
+	health_changed.emit(health, max_health)
+
+
 ## Puts Rostam back at a spawn point with nothing left over from the run that
 ## killed him: no timers, no combo, no velocity, no half-open hitbox.
 func respawn(at: Vector2) -> void:

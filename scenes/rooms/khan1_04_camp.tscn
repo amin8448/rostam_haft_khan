@@ -1,6 +1,7 @@
 [gd_scene format=4]
 
 [ext_resource type="Script" path="res://scripts/rooms/khan1_04_camp.gd" id="1_uu0fp"]
+[ext_resource type="PackedScene" path="res://scenes/world/grazing_ground.tscn" id="9_ground"]
 [ext_resource type="TileSet" path="res://assets/placeholder/terrain_tileset.tres" id="2_1y8k7"]
 [ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="3_x28f5"]
 [ext_resource type="Script" path="res://scripts/world/door.gd" id="4_0vdpf"]
@@ -38,3 +39,6 @@ collision_layer = 0
 collision_mask = 2
 script = ExtResource("4_0vdpf")
 target_room = "res://scenes/rooms/khan1_05_den.tscn"
+
+[node name="GrazingGround" parent="." instance=ExtResource("9_ground")]
+position = Vector2(640, 484)

@@ -15,6 +15,8 @@ signal room_entered(room: Room)
 @export var fade_time: float = 0.2
 @export_file("*.tscn") var starting_room: String = "res://scenes/rooms/khan1_01_marsh.tscn"
 @export var starting_entry: StringName = &"PlayerSpawn"
+## Shown when Rostam rests, so it is visible that it worked.
+@export var rest_text: String = "Rested."
 
 @export_group("Wiring")
 @export var rooms_parent_path: NodePath = ^"../Rooms"
@@ -65,6 +67,17 @@ func get_respawn_position() -> Vector2:
 
 func is_busy() -> bool:
 	return _busy
+
+
+## Resting: health back to full, and this ground becomes the respawn point. The
+## ground itself decides nothing; this is the only thing that knows which room
+## it is in.
+func on_rested(ground: GrazingGround) -> void:
+	set_respawn(_room_path, ground.get_rest_position())
+	if _player.has_method("heal_full"):
+		_player.heal_full()
+	if _banner != null and _banner.has_method("show_text"):
+		_banner.show_text(rest_text)
 
 
 ## Called by a grazing ground when Rostam rests. Stores where, not what.
@@ -148,14 +161,27 @@ func _load(path: String) -> void:
 	_room_path = path
 	_rooms.add_child(_room)
 
-	for door in _find_doors(_room):
-		door.entered.connect(on_door_entered)
+	for door in _find_nodes(_room, "Door"):
+		(door as Door).entered.connect(on_door_entered)
+	for ground in _find_nodes(_room, "GrazingGround"):
+		(ground as GrazingGround).rested.connect(on_rested)
 
 
-func _find_doors(node: Node) -> Array[Door]:
-	var found: Array[Door] = []
-	if node is Door:
-		found.append(node as Door)
+## The manager instantiates the room, so it connects what is in it rather than
+## anything in the room having to find the manager.
+func _find_nodes(node: Node, type: String) -> Array[Node]:
+	var found: Array[Node] = []
+	if node.is_class(type) or (node.get_script() != null and _is_type(node, type)):
+		found.append(node)
 	for child in node.get_children():
-		found.append_array(_find_doors(child))
+		found.append_array(_find_nodes(child, type))
 	return found
+
+
+func _is_type(node: Node, type: String) -> bool:
+	match type:
+		"Door":
+			return node is Door
+		"GrazingGround":
+			return node is GrazingGround
+	return false
