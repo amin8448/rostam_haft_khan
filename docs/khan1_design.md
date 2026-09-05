@@ -117,7 +117,8 @@ where to place Rostam.
    point). Short text: the reed bed at dusk.
 5. `khan1_05_den`: boss arena. Flat floor, walls on both sides, two low platforms.
 
-Room transitions: brief fade (0.2 s out, 0.2 s in). Rostam keeps his velocity through doors.
+Room transitions: brief fade, 0.3 s out and 0.3 s in. Playtesting moved this up from 0.2,
+which left the swap feeling abrupt. Rostam keeps his velocity through doors.
 
 ### Camera (Hollow Knight style)
 - One Camera2D that belongs to the world, not to Rostam. It follows a target position.

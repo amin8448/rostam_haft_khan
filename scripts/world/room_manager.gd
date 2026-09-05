@@ -10,9 +10,10 @@ extends Node
 
 signal room_entered(room: Room)
 
-## Section 7: 0.2 s out, 0.2 s in. The swap and the camera snap both happen
-## while the screen is fully black.
-@export var fade_time: float = 0.2
+## Out, then in. The swap and the camera snap both happen while the screen is
+## fully black. Section 7 asked for 0.2; playtesting wanted more cover over the
+## swap, so it is 0.3.
+@export var fade_time: float = 0.3
 @export_file("*.tscn") var starting_room: String = "res://scenes/rooms/khan1_01_marsh.tscn"
 @export var starting_entry: StringName = &"PlayerSpawn"
 ## Shown when Rostam rests, so it is visible that it worked.
