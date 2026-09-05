@@ -117,6 +117,14 @@ func begin_final_pounce() -> void:
 	telegraph(pounce_telegraph)
 
 
+## Stops it acting without beating it, for the moment the sequence takes over.
+func hold() -> void:
+	state = State.PINNED
+	velocity = Vector2.ZERO
+	_swipe.deactivate()
+	_pounce.deactivate()
+
+
 ## Beaten, but left on screen: Rakhsh throws it across the arena, so it must
 ## still be there to throw. Inert from here on.
 func set_defeated() -> void:
