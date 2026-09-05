@@ -28,6 +28,9 @@ signal room_entered(room: Room)
 var _room: Room
 var _room_path: String = ""
 var _busy: bool = false
+## A death that arrives mid-transition is held, not dropped. Dropping it left
+## Rostam dead with no respawn and no way out.
+var _death_pending: bool = false
 
 ## The respawn point is a room and a position, never "the camp". A second
 ## grazing ground anywhere in the game works with no change here
@@ -102,18 +105,32 @@ func on_door_entered(door: Door) -> void:
 		enter_room(path, entry)
 		_player.velocity = carried)
 	tween.tween_property(_fade, "color:a", 0.0, fade_time)
-	tween.tween_callback(func() -> void: _busy = false)
+	tween.tween_callback(_finish)
 
 
 func on_player_died() -> void:
 	if _busy:
+		# Mid-transition, so the screen is already black and a second tween would
+		# fight the first. Hold it and run it the moment this one finishes.
+		_death_pending = true
 		return
+	_start_death()
+
+
+func _start_death() -> void:
 	_busy = true
 	var tween: Tween = create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, fade_time)
 	tween.tween_callback(_respawn)
 	tween.tween_property(_fade, "color:a", 0.0, fade_time)
-	tween.tween_callback(func() -> void: _busy = false)
+	tween.tween_callback(_finish)
+
+
+func _finish() -> void:
+	_busy = false
+	if _death_pending:
+		_death_pending = false
+		_start_death()
 
 
 func _respawn() -> void:
