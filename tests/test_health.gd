@@ -19,8 +19,12 @@ extends SceneTree
 const Support = preload("res://tests/test_support.gd")
 
 const TIMEOUT: int = 1200
-## Centre of the HazardPatch in khan1_01_marsh, standing height.
-const ON_HAZARD: Vector2 = Vector2(1632, 612)
+const HAZARD_SCENE: PackedScene = preload("res://tests/fixtures/hazard_patch.tscn")
+## Placed by the test rather than found in the room, so this suite does not care
+## what khan1_01_marsh happens to contain. Sits on the open ground before the
+## pit, well clear of the spawn point the respawn check looks at.
+const HAZARD_POSITION: Vector2 = Vector2(300, 632)
+const ON_HAZARD: Vector2 = Vector2(300, 612)
 const SPAWN: Vector2 = Vector2(144, 612)
 
 var _player: Rostam
@@ -40,6 +44,10 @@ func _initialize() -> void:
 	root.add_child(main)
 	_player = main.get_node("Rostam") as Rostam
 	_player.died.connect(func() -> void: _died_signal = true)
+
+	var hazard: Node2D = HAZARD_SCENE.instantiate() as Node2D
+	hazard.position = HAZARD_POSITION
+	main.get_node("Room").add_child(hazard)
 
 
 func _physics_process(_delta: float) -> bool:

@@ -1,9 +1,6 @@
 class_name Room
 extends Node2D
 
-## TEMPORARY in khan1_01_marsh: the TrainingDummy and the HazardPatch exist only
-## to test combat, health and respawn without an enemy. Session 3 removes both.
-
 ## The area the camera is allowed to show, in world pixels. Every room must
 ## declare its own; the world reads this when the room is entered. Left empty
 ## on purpose so a room that forgets to set it says so instead of silently

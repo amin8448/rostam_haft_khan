@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/training_dummy.gd" id="1_dummy"]
+[ext_resource type="Script" path="res://tests/fixtures/training_dummy.gd" id="1_dummy"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="2_hurtbox"]
 [ext_resource type="Script" path="res://scripts/combat/hit_flash.gd" id="3_flash"]
 

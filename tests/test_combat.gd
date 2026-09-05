@@ -30,7 +30,12 @@ extends SceneTree
 const Support = preload("res://tests/test_support.gd")
 
 const TIMEOUT: int = 1200
-## Somewhere with nothing in reach: the dummy is at x=400, the hazard at x=1632.
+const DUMMY_SCENE: PackedScene = preload("res://tests/fixtures/training_dummy.tscn")
+## Placed by the test rather than found in the room, so this suite does not care
+## what khan1_01_marsh happens to contain.
+const DUMMY_POSITION: Vector2 = Vector2(400, 618)
+## Far enough from the dummy that a swing here reaches nothing: the longest
+## blade ends 56 px from Rostam's centre, and the dummy starts 386 px out.
 const EMPTY_GROUND: Vector2 = Vector2(200, 612)
 ## High enough that a full air swing plus a second attempt both fit before
 ## landing resets the one-air-attack rule.
@@ -61,7 +66,12 @@ func _initialize() -> void:
 	root.add_child(main)
 	_player = main.get_node("Rostam") as Rostam
 	_sword = _player.get_node("Visuals/SwordHitbox") as Hitbox
-	_dummy = main.get_node("Room/TrainingDummy") as Node2D
+	_dummy = DUMMY_SCENE.instantiate() as Node2D
+	# position, not global_position, and before add_child: Enemy._ready records
+	# its home on entering the tree, and reset() would otherwise send it to the
+	# origin.
+	_dummy.position = DUMMY_POSITION
+	main.get_node("Room").add_child(_dummy)
 
 
 func _physics_process(_delta: float) -> bool:
