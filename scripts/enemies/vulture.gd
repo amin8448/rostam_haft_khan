@@ -17,6 +17,15 @@ enum State { HOVER, TELEGRAPH, DIVE, RETURN }
 ## Radians per second along the curve. One lap takes about 5 s at 1.2.
 @export var hover_speed: float = 1.2
 
+@export_group("Body")
+## The contact box is trimmed by this much off the bottom, so the Vulture's
+## belly is safe to be under while its top and sides still hurt. The hurtbox
+## stays the full body, so the mace can hit it from any side.
+@export var contact_safe_underside: float = 10.0:
+	set(value):
+		contact_safe_underside = value
+		_shape_contact()
+
 @export_group("Attack")
 ## Horizontal band within which Rostam counts as underneath.
 @export var detect_width: float = 90.0
@@ -51,6 +60,26 @@ func get_anchor() -> Vector2:
 func _on_ready() -> void:
 	_phase = 0.0
 	global_position = _home
+	_shape_contact()
+
+
+## Trims the contact box up off the belly. Driven from the hurtbox's shape so
+## the two cannot drift apart, and the drawn body is left alone: this changes
+## where it hurts, not what it looks like.
+func _shape_contact() -> void:
+	if _contact == null:
+		return
+	var full: Vector2 = _body_size()
+	var height: float = maxf(full.y - contact_safe_underside, 2.0)
+	_contact.size = Vector2(full.x, height)
+	_contact.offset = Vector2(0.0, -(full.y - height) * 0.5)
+
+
+func _body_size() -> Vector2:
+	var shape: CollisionShape2D = _hurtbox.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape != null and shape.shape is RectangleShape2D:
+		return (shape.shape as RectangleShape2D).size
+	return Vector2(36, 16)
 
 
 func _on_reset() -> void:

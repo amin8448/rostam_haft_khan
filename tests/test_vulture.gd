@@ -10,17 +10,21 @@ extends SceneTree
 ##   the dive                 arrives within 30 px of where he was when it
 ##                            committed, not where he has since moved to
 ##   afterwards               back on the anchor, hovering again
-##   two air attacks          2 health to 0, from a standing jump
+##   two air attacks          2 health to 0, and Rostam takes no damage doing it
+##   contact box              trimmed contact_safe_underside off the belly
+##   touching its side        still costs 1, so only the belly is inert
 ##
 ## The kill phase resets the Vulture and then zeroes hover_speed so it sits on
 ## its anchor. That isolates the claim section 6 actually makes, which is that a
 ## jump plus the air attack can reach it. Leading its horizontal swing is a
 ## matter of play skill and is not what this check is for.
 ##
-## It swings from 45 px to the side, not from underneath. Rostam's head reaches
-## 22 px higher than his mace does, so jumping straight up into the Vulture
-## puts his hurtbox into its contact box before the mace arrives: he takes the
-## hit, the knockback replaces his rise, and the stun swallows the attack input.
+## It swings from 45 px to the side, not from underneath, and the safe underside
+## does not change that. Rostam's capsule is 56 tall and its top sits 22 px above
+## the top of his mace box, while the Vulture is 16 px tall: by the time the mace
+## reaches its underside his head is already past its top, and his capsule spans
+## the whole body. No contact box inside that body can avoid him, so trimming the
+## belly makes it safe to be under but not safe to attack from under.
 ## 45 px clears the two bodies (12 + 18 = 30) while leaving the mace, which
 ## reaches 44 px, well inside it.
 
@@ -49,6 +53,8 @@ var _saw_telegraph: bool = false
 var _saw_dive: bool = false
 var _jumps: int = 0
 var _jump_at: int = 0
+var _health_at_kill: int = 0
+var _side_health_before: int = 0
 
 
 func _initialize() -> void:
@@ -79,6 +85,8 @@ func _physics_process(_delta: float) -> bool:
 			_run_return()
 		"kill":
 			_run_kill()
+		"side":
+			_run_side(_tick - _phase_start)
 		"done":
 			quit(Support.report("test_vulture", _failures))
 			return true
@@ -146,6 +154,8 @@ func _run_return() -> void:
 	_failures += 0 if Support.near("returns to the anchor y",
 			_vulture.global_position.y, ANCHOR.y) else 1
 
+	_check_contact_box()
+
 	# Park it on its anchor for the reach test.
 	_vulture.reset()
 	_vulture.hover_speed = 0.0
@@ -158,6 +168,7 @@ func _run_kill() -> void:
 	var at: int = _tick - _phase_start
 	if at == 5:
 		_player.respawn(Vector2(_vulture.global_position.x - 45.0, UNDERNEATH.y))
+		_health_at_kill = _player.health
 		return
 	# respawn() drops him from exactly resting height and he settles over a few
 	# ticks, so jumping on a fixed offset launches him mid-fall and cuts the arc
@@ -177,10 +188,40 @@ func _run_kill() -> void:
 	if not _vulture.is_alive():
 		_failures += 0 if Support.exact("two air attacks kill it", _vulture.health, 0) else 1
 		_failures += 0 if Support.at_most("jumps needed", float(_jumps), 2.0, "jumps") else 1
-		_phase = "done"
+		_failures += 0 if Support.exact("no damage taken killing it",
+				_player.health, _health_at_kill) else 1
+		_vulture.reset()
+		_vulture.hover_speed = 0.0
+		_phase = "side"
+		_phase_start = _tick
 	elif _jumps >= 4:
 		_failures += 0 if Support.exact("two air attacks kill it", _vulture.health, 0) else 1
 		_phase = "done"
+
+
+## The belly being inert must not make the whole body inert: brushing its side
+## still costs a hit, which is what keeps it a threat on the dive.
+func _run_side(at: int) -> void:
+	if at == 5:
+		_player.respawn(Vector2(_vulture.global_position.x - 22.0, _vulture.global_position.y))
+		_side_health_before = _player.health
+	elif at == 40:
+		_failures += 0 if Support.exact("touching its side still costs 1",
+				_side_health_before - _player.health, 1) else 1
+		_phase = "done"
+
+
+## Geometry rather than behaviour: the belly cannot be checked by walking into
+## it, because Rostam's capsule is taller than the whole Vulture.
+func _check_contact_box() -> void:
+	var shape: CollisionShape2D = _vulture.get_node("ContactHitbox/CollisionShape2D")
+	var box: RectangleShape2D = shape.shape as RectangleShape2D
+	var body_bottom: float = 8.0
+	var contact_bottom: float = shape.position.y + box.size.y * 0.5
+	_failures += 0 if Support.near("belly left uncovered",
+			body_bottom - contact_bottom, _vulture.contact_safe_underside) else 1
+	_failures += 0 if Support.near("contact box still full width",
+			box.size.x, 36.0) else 1
 
 
 ## One air attack per jump, swung on the way up so the mace head is open near the

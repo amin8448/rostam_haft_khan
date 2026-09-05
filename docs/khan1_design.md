@@ -96,7 +96,8 @@ Two types, both dumb on purpose. Patterns matter more than intelligence.
 - Hovers in a slow figure-eight above a fixed anchor point.
 - When Rostam passes underneath, it dives in a straight line toward his last position, then
   returns to the anchor.
-- 2 health, 1 damage. Can be hit with the air attack.
+- 2 health, 1 damage. Can be hit with the air attack. Its underside is safe: the contact
+  damage covers the top and sides only, so the dive is the threat rather than the body.
 
 ## 7. Rooms and camera
 
