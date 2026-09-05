@@ -44,10 +44,10 @@ target_room = "res://scenes/rooms/khan1_04_camp.tscn"
 position = Vector2(688, 532)
 
 [node name="VultureMid" parent="." instance=ExtResource("10_vulture")]
-position = Vector2(1180, 510)
+position = Vector2(1180, 448)
 
 [node name="JackalEast" parent="." instance=ExtResource("9_jackal")]
 position = Vector2(1328, 532)
 
 [node name="VultureEast" parent="." instance=ExtResource("10_vulture")]
-position = Vector2(1910, 510)
+position = Vector2(1910, 448)
