@@ -1,0 +1,68 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/jackal.gd" id="1_jackal"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="2_hurtbox"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://scripts/combat/hit_flash.gd" id="4_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jackal"]
+size = Vector2(40, 24)
+
+[node name="Jackal" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_jackal")
+max_health = 3
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="Body" type="Polygon2D" parent="Visuals"]
+color = Color(0.85, 0.22, 0.22, 1)
+polygon = PackedVector2Array(-20, -12, 20, -12, 20, 12, -20, 12)
+
+[node name="Snout" type="Polygon2D" parent="Visuals"]
+color = Color(1, 0.47, 0.42, 1)
+polygon = PackedVector2Array(12, -7, 20, -7, 20, 5, 12, 5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_jackal")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+script = ExtResource("2_hurtbox")
+body_path = NodePath("..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("RectangleShape2D_jackal")
+
+[node name="ContactHitbox" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 64
+script = ExtResource("3_hitbox")
+damage = 1
+knockback_speed = 200.0
+knockback_lift = 150.0
+hit_pause = 0.0
+size = Vector2(40, 24)
+continuous = true
+body_path = NodePath("..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactHitbox"]
+shape = SubResource("RectangleShape2D_jackal")
+
+[node name="HitFlash" type="Node" parent="."]
+script = ExtResource("4_flash")
+visuals_path = NodePath("../Visuals")
+
+[node name="Sensors" type="Node2D" parent="."]
+
+[node name="WallCast" type="RayCast2D" parent="Sensors"]
+target_position = Vector2(26, 0)
+collision_mask = 1
+
+[node name="LedgeCast" type="RayCast2D" parent="Sensors"]
+position = Vector2(24, 0)
+target_position = Vector2(0, 28)
+collision_mask = 1

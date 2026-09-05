@@ -10,6 +10,9 @@ extends Node
 @export var visuals_path: NodePath = ^"../Visuals"
 @export var duration: float = 0.08
 @export var flash_color: Color = Color(1, 1, 1, 1)
+## Telegraphs use a lighter shade of the body rather than white, so winding up
+## to swing does not read as having just been hit.
+@export var telegraph_color: Color = Color(1, 0.55, 0.5, 1)
 
 var _originals: Dictionary = {}
 var _timer: float = 0.0
@@ -25,12 +28,24 @@ func _ready() -> void:
 		_originals[polygon] = polygon.color
 
 
+## Hit feedback: a short white blink.
 func flash() -> void:
+	_begin(duration, flash_color)
+
+
+## Attack telegraph: held for as long as the wind-up lasts, so the moment it
+## ends is the moment the attack starts. Section 9 asks for exactly this, since
+## there is no animation to read instead.
+func telegraph(seconds: float) -> void:
+	_begin(seconds, telegraph_color)
+
+
+func _begin(seconds: float, color: Color) -> void:
 	if _originals.is_empty():
 		return
 	for polygon in _originals:
-		(polygon as Polygon2D).color = flash_color
-	_timer = duration
+		(polygon as Polygon2D).color = color
+	_timer = seconds
 	set_physics_process(true)
 
 

@@ -16,6 +16,8 @@ extends CharacterBody2D
 
 signal died
 
+const PLAYER_GROUP: StringName = &"player"
+
 @export var max_health: int = 3
 ## Seconds before coming back unaided. Zero means stay dead until Room.reset(),
 ## which is what real enemies do; only the test dummy sets it.
@@ -23,12 +25,18 @@ signal died
 @export var gravity: float = 1800.0
 ## Knockback bleeds off at this rate, so a hit shoves and it settles.
 @export var knockback_friction: float = 900.0
+## Time after a hit during which the enemy drifts on the knockback instead of
+## driving its own movement. Without it the AI overwrites velocity on the very
+## next tick and the knockback never reads at all.
+@export var stagger_time: float = 0.18
 
 var health: int = 0
 
 var _hit_pause_timer: float = 0.0
 var _respawn_timer: float = 0.0
+var _stagger_timer: float = 0.0
 var _home: Vector2
+var _player_ref: Node2D
 
 @onready var _visuals: Node2D = $Visuals
 @onready var _flash: HitFlash = $HitFlash
@@ -57,6 +65,11 @@ func _physics_process(delta: float) -> void:
 				reset()
 		return
 
+	if _stagger_timer > 0.0:
+		_stagger_timer -= delta
+		_drift(delta)
+		return
+
 	_tick(delta)
 
 
@@ -69,6 +82,7 @@ func take_damage(amount: int, knockback: Vector2, _source: Node2D) -> bool:
 	health -= amount
 	_flash.flash()
 	velocity = knockback
+	_stagger_timer = stagger_time
 
 	if health <= 0:
 		health = 0
@@ -91,14 +105,30 @@ func is_alive() -> bool:
 	return health > 0
 
 
+func is_staggered() -> bool:
+	return _stagger_timer > 0.0
+
+
 func get_home() -> Vector2:
 	return _home
 
 
-## Briefly whitens the body. Enemies use it for a telegraph as well as for being
-## hit, since there is no animation to read instead.
+## A short white blink, for being hit.
 func flash() -> void:
 	_flash.flash()
+
+
+## A lighter shade held for the length of a wind-up, for telegraphing an attack.
+func telegraph(seconds: float) -> void:
+	_flash.telegraph(seconds)
+
+
+## The player, found by group rather than by a hard reference or a path up the
+## tree. Looked up lazily so enemies do not depend on _ready ordering.
+func get_player() -> Node2D:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		_player_ref = get_tree().get_first_node_in_group(PLAYER_GROUP) as Node2D
+	return _player_ref
 
 
 ## Called by Room.reset() when Rostam respawns, and by respawn_delay.
@@ -108,6 +138,7 @@ func reset() -> void:
 	velocity = Vector2.ZERO
 	_respawn_timer = 0.0
 	_hit_pause_timer = 0.0
+	_stagger_timer = 0.0
 	_flash.clear()
 	_set_present(true)
 	_on_reset()
@@ -133,6 +164,14 @@ func _tick(_delta: float) -> void:
 
 func _on_reset() -> void:
 	pass
+
+
+## How the body moves while riding out knockback. Ground enemies fall; the
+## Vulture overrides this to stay airborne.
+func _drift(delta: float) -> void:
+	_apply_gravity(delta)
+	_apply_knockback_friction(delta)
+	move_and_slide()
 
 
 ## A dead enemy stops being drawn, stops being hittable and stops dealing
