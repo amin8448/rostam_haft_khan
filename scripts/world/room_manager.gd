@@ -117,6 +117,10 @@ func set_boss_health(current: int, maximum: int) -> void:
 		_boss_bar.set_health(current, maximum)
 
 
+func is_boss_bar_showing() -> bool:
+	return _boss_bar != null and _boss_bar.has_method("is_showing") and _boss_bar.is_showing()
+
+
 func hide_boss() -> void:
 	if _boss_bar != null:
 		_boss_bar.hide_bar()
@@ -205,6 +209,10 @@ func _finish() -> void:
 
 
 func _respawn() -> void:
+	# Dying in the arena has to take the boss bar with it. enter_room hides it,
+	# but neither branch below goes through enter_room, so it was left on screen
+	# for the rest of the run.
+	hide_boss()
 	if _respawn_room != _room_path:
 		# A freshly loaded room is already in its starting state.
 		_load(_respawn_room)

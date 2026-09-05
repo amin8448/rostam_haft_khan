@@ -45,6 +45,10 @@ func hide_bar() -> void:
 	_fill.visible = false
 
 
+func is_showing() -> bool:
+	return _back.visible
+
+
 func set_health(current: int, maximum: int) -> void:
 	if maximum <= 0:
 		return

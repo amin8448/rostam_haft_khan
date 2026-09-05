@@ -4,6 +4,7 @@ extends SceneTree
 ##
 ## Expected:
 ##   crossing the trigger      fight starts, west door locks, Lion wakes
+##   dying mid-fight           the boss bar goes with him
 ##   Rostam close              swipe
 ##   Rostam at medium range    pounce
 ##   telegraph lengths         the exported ones, within a physics tick
@@ -68,6 +69,8 @@ func _physics_process(_delta: float) -> bool:
 	match _phase:
 		"start":
 			_run_start()
+		"death":
+			_run_death()
 		"swipe":
 			_run_swipe()
 		"pounce":
@@ -97,17 +100,38 @@ func _run_start() -> void:
 		_failures += 0 if Support.exact("west door locks behind him",
 				(_arena.get_node("WestDoor") as Door).locked, true) else 1
 
-		# Short approach and no roar, so the loop commits to the attack under
-		# test rather than to whatever came round next.
-		_lion.approach_min = 0.2
-		_lion.approach_max = 0.2
-		_lion.roar_interval = 60.0
-		_begin("swipe")
+		_failures += 0 if Support.exact("the boss bar is up",
+				_mgr.is_boss_bar_showing(), true) else 1
+		_player.take_damage(_player.max_health, Vector2.ZERO, null)
+		_begin("death")
+
+
+## The bar has to leave with him. It used to stay on screen for the rest of the
+## run, because the death path does not go through enter_room.
+func _run_death() -> void:
+	if _tick < _phase_start + 90:
+		return
+	_failures += 0 if Support.exact("dying clears the boss bar",
+			_mgr.is_boss_bar_showing(), false) else 1
+	_failures += 0 if Support.exact("dying leaves the arena",
+			_mgr.get_current_room_path().get_file(), "khan1_01_marsh.tscn") else 1
+
+	# Back in for the rest, on a fresh arena.
+	_mgr.enter_room(DEN, &"EntryWest")
+	_arena = _mgr.get_current_room()
+	_lion = _arena.get_node("Lion") as Lion
+	_player.respawn(ON_TRIGGER)
+	# Short approach and no roar, so the loop commits to the attack under test
+	# rather than to whatever came round next.
+	_lion.approach_min = 0.2
+	_lion.approach_max = 0.2
+	_lion.roar_interval = 60.0
+	_begin("swipe")
 
 
 func _run_swipe() -> void:
 	# Well inside swipe_range of 150.
-	if _tick == _phase_start + 1:
+	if _tick == _phase_start + 20:
 		_player.respawn(Vector2(_lion.global_position.x - 90.0, 548.0))
 		return
 	if not _arm():

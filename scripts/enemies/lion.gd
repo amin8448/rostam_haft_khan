@@ -79,6 +79,7 @@ var _pounce_target: Vector2 = Vector2.ZERO
 var _final_pounce: bool = false
 var _phase_two: bool = false
 var _airborne_ticks: int = 0
+var _pounce_start_y: float = 0.0
 
 @onready var _swipe: Hitbox = $SwipeHitbox
 @onready var _pounce: Hitbox = $PounceHitbox
@@ -119,6 +120,7 @@ func begin_final_pounce() -> void:
 
 ## Stops it acting without beating it, for the moment the sequence takes over.
 func hold() -> void:
+	_land_from_pounce()
 	state = State.PINNED
 	velocity = Vector2.ZERO
 	_swipe.deactivate()
@@ -128,6 +130,7 @@ func hold() -> void:
 ## Beaten, but left on screen: Rakhsh throws it across the arena, so it must
 ## still be there to throw. Inert from here on.
 func set_defeated() -> void:
+	_land_from_pounce()
 	health = 0
 	state = State.PINNED
 	velocity = Vector2.ZERO
@@ -160,6 +163,7 @@ func _on_ready() -> void:
 
 
 func _on_reset() -> void:
+	_land_from_pounce()
 	state = State.ASLEEP
 	facing = start_facing
 	_timer = 0.0
@@ -177,6 +181,11 @@ func _tick(delta: float) -> void:
 	if state != State.ASLEEP and state != State.PINNED:
 		_roar_timer = maxf(_roar_timer - delta, 0.0)
 
+	# The pounce integrates its own arc and returns early: see _pounce_tick.
+	if state == State.POUNCE:
+		_pounce_tick(delta)
+		return
+
 	match state:
 		State.ASLEEP, State.PINNED:
 			velocity.x = 0.0
@@ -186,8 +195,6 @@ func _tick(delta: float) -> void:
 			_telegraph_tick(delta)
 		State.SWIPE:
 			_swipe_tick(delta)
-		State.POUNCE:
-			_pounce_tick(delta)
 		State.RECOVER, State.ROAR:
 			_wait(delta)
 
@@ -265,15 +272,28 @@ func _launch_pounce() -> void:
 
 	state = State.POUNCE
 	_airborne_ticks = 0
+	_pounce_start_y = global_position.y
+	# Off the terrain for the leap. The arena's platforms hang 32 px above its
+	# head and the arc rises 110, so with collision on it cracked its skull on
+	# one and landed 181 px short of where it aimed.
+	set_collision_mask_value(1, false)
 	_apply_boxes()
 
 
-func _pounce_tick(_delta: float) -> void:
+## Integrated directly rather than through move_and_slide, so the leap is an
+## exact parabola that starts and ends at the same height and lands on its mark.
+## The arena is flat, which is what makes that safe.
+func _pounce_tick(delta: float) -> void:
 	_airborne_ticks += 1
+	velocity.y += gravity * delta
+	global_position += velocity * delta
+
 	# A few ticks of grace so the launch frame does not count as a landing.
-	if _airborne_ticks < 4 or not is_on_floor():
+	if _airborne_ticks < 4 or global_position.y < _pounce_start_y:
 		return
 
+	global_position.y = _pounce_start_y
+	_land_from_pounce()
 	velocity.x = 0.0
 	_pounce.activate()
 	_timer = pounce_land_active
@@ -328,6 +348,11 @@ func _apply_facing() -> void:
 func _apply_boxes() -> void:
 	_swipe.offset = Vector2(float(facing) * (swipe_reach + swipe_size.x * 0.5), 0.0)
 	_pounce.offset = Vector2(0.0, pounce_size.y * 0.5)
+
+
+## Terrain collision back on, wherever the pounce was interrupted.
+func _land_from_pounce() -> void:
+	set_collision_mask_value(1, true)
 
 
 func _shake_camera() -> void:
