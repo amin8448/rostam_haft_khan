@@ -17,6 +17,11 @@ extends SceneTree
 ##   Up + attack on the ground    swing index 4, box bottom above his head
 ##   the same swing               1 damage to a dummy hung over him
 ##   afterwards                   the ground combo is back at swing 1
+##   Down + attack airborne       swing index 5, bounces him upward off a dummy
+##                                below him, and hands the air swing back
+##   Down + attack grounded       swing index 6, hits a dummy on either side,
+##                                and refuses movement for the whole swing
+##   after either                 the ground combo is back at swing 1
 ##
 ## The timing phase swings at empty air on purpose. A swing that connects also
 ## triggers the 0.05 s hit pause, which correctly suspends the swing timer but
@@ -43,6 +48,20 @@ const EMPTY_GROUND: Vector2 = Vector2(200, 612)
 ## High enough that a full air swing plus a second attempt both fit before
 ## landing resets the one-air-attack rule.
 const HIGH_AIR: Vector2 = Vector2(300, 150)
+## Open air over the clear ground between the pit and the first platform. Well
+## clear of the floor: near it he lands before the pogo's box even opens, which
+## measures the fall rather than the swing.
+const POGO_DUMMY: Vector2 = Vector2(650, 400)
+## The air swing is spent well away from the pogo target: its box is above his
+## head, and falling past the dummy would let it clip the thing the pogo is
+## supposed to be the only one hitting.
+const AIR_SPEND: Vector2 = Vector2(300, 300)
+## Just above the dummy. The pogo overlaps it anywhere from y 316 to 396, so
+## this leaves room to fall through the wind-up and still connect.
+const POGO_ABOVE: Vector2 = Vector2(650, 360)
+const SMASH_STAND: Vector2 = Vector2(300, 612)
+const SMASH_LEFT: Vector2 = Vector2(260, 618)
+const SMASH_RIGHT: Vector2 = Vector2(340, 618)
 
 var _player: Rostam
 var _mace: Hitbox
@@ -68,6 +87,18 @@ var _up_box_bottom: float = 0.0
 var _up_head: float = 0.0
 var _up_index: int = -1
 var _combo_after_up: int = -1
+var _pogo_dummy: Node2D
+var _air_one: int = -1
+var _air_two: int = -1
+var _pogo_index: int = -1
+var _pogo_rise: float = 0.0
+var _pogo_landed: bool = false
+var _smash_left: Node2D
+var _smash_right: Node2D
+var _smash_index: int = -1
+var _smash_x: float = 0.0
+var _smash_drift: float = 0.0
+var _combo_after_smash: int = -1
 
 
 func _initialize() -> void:
@@ -118,6 +149,10 @@ func _physics_process(_delta: float) -> bool:
 			_run_air()
 		"up":
 			_run_up(_tick - _phase_start)
+		"pogo":
+			_run_pogo(_tick - _phase_start)
+		"smash":
+			_run_smash(_tick - _phase_start)
 		"done":
 			quit(Support.report("test_combat", _failures))
 			return true
@@ -345,4 +380,137 @@ func _run_up(at: int) -> void:
 	_failures += 0 if Support.exact("it hits what is above him",
 			_up_dummy.max_health - _up_dummy.health, 1) else 1
 	_failures += 0 if Support.exact("the combo is back at swing 1", _combo_after_up, 0) else 1
+	_phase = "pogo"
+	_phase_start = _tick
+
+
+## The pogo. Proving the air swing comes back needs it spent first, so this
+## spends it, pogos, and then spends it again, all without touching the floor:
+## landing would hand it back on its own and prove nothing.
+func _run_pogo(at: int) -> void:
+	if at > 8 and at < 70 and _player.is_on_floor():
+		_pogo_landed = true
+
+	if at == 1:
+		_pogo_dummy = DUMMY_SCENE.instantiate() as Node2D
+		_pogo_dummy.position = POGO_DUMMY
+		_room().add_child(_pogo_dummy)
+		_pogo_dummy.gravity = 0.0
+		return
+	if at == 5:
+		_player.respawn(AIR_SPEND)
+		return
+	if at == 8:
+		Input.action_press("attack")
+		return
+	if at == 9:
+		Input.action_release("attack")
+		return
+	if at == 13:
+		_air_one = _player.get_swing_index()
+		return
+	if at == 20:
+		Input.action_press("aim_down")
+		return
+	if at == 22:
+		# Placed, not respawned: respawn would hand the air swing back by
+		# itself and the check below would prove nothing.
+		_player.global_position = POGO_ABOVE
+		_player.velocity = Vector2.ZERO
+		Input.action_press("attack")
+		return
+	if at == 23:
+		Input.action_release("attack")
+		return
+	if at == 26:
+		_pogo_index = _player.get_swing_index()
+		return
+	if at > 26 and at < 50:
+		_pogo_rise = minf(_pogo_rise, _player.velocity.y)
+		return
+	if at == 52:
+		Input.action_release("aim_down")
+		_player.global_position = AIR_SPEND
+		_player.velocity = Vector2.ZERO
+		return
+	if at == 58:
+		Input.action_press("attack")
+		return
+	if at == 59:
+		Input.action_release("attack")
+		return
+	if at == 63:
+		_air_two = _player.get_swing_index()
+		return
+	if at != 70:
+		return
+
+	_failures += 0 if Support.exact("air swing spent first", _air_one, Rostam.AIR_SWING) else 1
+	_failures += 0 if Support.exact("Down plus attack airborne is swing 5",
+			_pogo_index, Rostam.POGO_SWING) else 1
+	_failures += 0 if Support.exact("the pogo hits what is under him",
+			_pogo_dummy.max_health - _pogo_dummy.health, 1) else 1
+	_failures += 0 if Support.at_most("the hit bounces him upward",
+			_pogo_rise, -_player.pogo_bounce_velocity + 1.0, "px/s") else 1
+	_failures += 0 if Support.exact("he never touched the floor", _pogo_landed, false) else 1
+	_failures += 0 if Support.exact("so the air swing came back",
+			_air_two, Rostam.AIR_SWING) else 1
+
+	_phase = "smash"
+	_phase_start = _tick
+
+
+## The smash. Wide enough to catch something on either side, and a commitment:
+## movement is refused for the whole swing, not just the wind-up.
+func _run_smash(at: int) -> void:
+	if at == 1:
+		_smash_left = DUMMY_SCENE.instantiate() as Node2D
+		_smash_left.position = SMASH_LEFT
+		_room().add_child(_smash_left)
+		_smash_right = DUMMY_SCENE.instantiate() as Node2D
+		_smash_right.position = SMASH_RIGHT
+		_room().add_child(_smash_right)
+		return
+	if at == 5:
+		_player.respawn(SMASH_STAND)
+		return
+	if at == 20:
+		Input.action_press("aim_down")
+		return
+	if at == 24:
+		Input.action_press("attack")
+		return
+	if at == 25:
+		Input.action_release("attack")
+		return
+	if at == 30:
+		_smash_index = _player.get_swing_index()
+		return
+	# Strictly inside the swing: it starts about tick 26 and runs 0.87 s.
+	if at == 45:
+		_smash_x = _player.global_position.x
+		return
+	if at > 45 and at < 70:
+		Input.action_press("move_right")
+		_smash_drift = maxf(_smash_drift, absf(_player.global_position.x - _smash_x))
+		return
+	if at == 70:
+		Input.action_release("move_right")
+		Input.action_release("aim_down")
+		return
+	if at == 95:
+		_combo_after_smash = _player.get_swing_index()
+		return
+	if at != 100:
+		return
+
+	_failures += 0 if Support.exact("Down plus attack grounded is swing 6",
+			_smash_index, Rostam.SMASH_SWING) else 1
+	_failures += 0 if Support.exact("it hits the one on his left",
+			_smash_left.max_health - _smash_left.health, 1) else 1
+	_failures += 0 if Support.exact("it hits the one on his right",
+			_smash_right.max_health - _smash_right.health, 1) else 1
+	_failures += 0 if Support.at_most("he cannot move during it", _smash_drift, 1.0) else 1
+	_failures += 0 if Support.exact("the combo is back at swing 1", _combo_after_smash, 0) else 1
 	_phase = "done"
+
