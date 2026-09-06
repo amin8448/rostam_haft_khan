@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="VerseSet" format=3]
+
+[ext_resource type="Script" path="res://scripts/verses/verse_entry.gd" id="1_5ryip"]
+[ext_resource type="Script" path="res://scripts/verses/verse_set.gd" id="2_ejmtk"]
+
+[sub_resource type="Resource" id="Resource_pxo6t"]
+script = ExtResource("1_5ryip")
+persian = "سوی رخش رخشان برآمد دمان / چو آتش بجوشید رخش آن زمان"
+english = "The lion sprang at radiant Rakhsh, and in that moment Rakhsh boiled up like fire."
+beat = &"fight"
+
+[sub_resource type="Resource" id="Resource_8w2kq"]
+script = ExtResource("1_5ryip")
+persian = "دو دست اندر آورد و زد بر سرش / همان تیز دندان به پشت اندرش"
+english = "He brought both forehooves down on its head, and sank his sharp teeth into its back."
+beat = &"fight"
+
+[sub_resource type="Resource" id="Resource_3e7hy"]
+script = ExtResource("1_5ryip")
+persian = "همی زد بران خاک تا پاره کرد / ددی را بران چاره بیچاره کرد"
+english = "He beat it against the earth until it was torn apart, and by that means left the beast helpless."
+beat = &"fight"
+
+[sub_resource type="Resource" id="Resource_lnyct"]
+script = ExtResource("1_5ryip")
+persian = "چو بیدار شد رستم تیزچنگ / جهان دید بر شیر تاریک و تنگ"
+english = "When sharp-clawed Rostam awoke, he saw the world had gone dark and narrow for the lion."
+beat = &"wake"
+
+[sub_resource type="Resource" id="Resource_y1fsi"]
+script = ExtResource("1_5ryip")
+persian = "چنین گفت با رخش کای هوشیار / که گفتت که با شیر کن کارزار"
+english = "He said to Rakhsh: you watchful one, who told you to make war on a lion?"
+beat = &"scold"
+
+[sub_resource type="Resource" id="Resource_vc52l"]
+script = ExtResource("1_5ryip")
+persian = "اگر تو شدی کشته در چنگ اوی / من این گرز و این مغفر جنگجوی"
+english = "Had you been killed in its claws, how would I have carried this gorz and this warrior's helm,"
+beat = &"scold"
+paired_with_next = true
+
+[sub_resource type="Resource" id="Resource_jw1b7"]
+script = ExtResource("1_5ryip")
+persian = "چگونه کشیدی به مازندران / کمند کیانی و گرز گران"
+english = "the Kayanid lasso and the heavy mace, to Mazandaran?"
+beat = &"scold"
+
+[sub_resource type="Resource" id="Resource_eeqqe"]
+script = ExtResource("1_5ryip")
+persian = "چرا نامدی نزد من با خروش / خروش توام چون رسیدی به گوش"
+english = "Why did you not come to me neighing? Had that neigh reached my ear, I would have risen."
+beat = &"scold"
+
+[resource]
+script = ExtResource("2_ejmtk")
+entries = Array[ExtResource("1_5ryip")]([SubResource("Resource_pxo6t"), SubResource("Resource_8w2kq"), SubResource("Resource_3e7hy"), SubResource("Resource_lnyct"), SubResource("Resource_y1fsi"), SubResource("Resource_vc52l"), SubResource("Resource_jw1b7"), SubResource("Resource_eeqqe")])
