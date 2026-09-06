@@ -112,6 +112,11 @@ TileSet. Consistent color code so the developer can read the screen at a glance:
 - Interactables: yellow
 - Terrain: dark grey
 
+Persian text uses Vazirmatn, in `assets/fonts/vazirmatn/`, under the SIL Open Font License
+with `OFL.txt` beside it. Godot 4 shapes Arabic script correctly given a font that has the
+glyphs, so Persian needs no special handling beyond using this font and setting the label's
+text direction to RTL. English keeps the default UI font.
+
 Do not download asset packs or generate images unless asked.
 
 ## Workflow
