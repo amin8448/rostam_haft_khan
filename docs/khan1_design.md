@@ -38,11 +38,14 @@ on every action.
 | dash      | Shift, K          | RT or B                   |
 | interact  | E                 | Y (top face button)       |
 | aim_up    | Up arrow, W       | Left stick up, D-pad up   |
+| aim_down  | Down arrow, S     | Left stick down, D-pad down |
 | pause     | Escape            | Start                     |
 
 Dash is defined in the input map now but implemented in a later session.
 
-`aim_up` is held, not tapped: with `attack` it aims the swing upward. The Up arrow was
+`aim_up` and `aim_down` are held, not tapped: with `attack` they aim the swing up or down.
+Both must be pushed past Rostam's `aim_threshold` before they count, so a diagonal shove on
+the stick while running does not aim by accident. The Up arrow was
 moved off `interact` so holding it to aim can never rest at a grazing ground by accident.
 
 ## 4. Movement feel

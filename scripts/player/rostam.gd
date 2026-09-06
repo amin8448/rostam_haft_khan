@@ -28,6 +28,10 @@ const UP_SWING: int = 4
 ## Consecutive physics ticks the input must hold a new direction before facing
 ## follows it. Catches a rebound strong enough to clear facing_threshold.
 @export var facing_hold_ticks: int = 3
+## How far aim_up or aim_down has to be pushed before it counts as aiming. A
+## stick shoved diagonally while running clears the action's own deadzone
+## easily, and without this that reads as an aim.
+@export var aim_threshold: float = 0.5
 
 @export_group("Jump")
 @export var jump_velocity: float = 640.0
@@ -357,7 +361,7 @@ func _try_start_attack(from_buffer: bool = false) -> void:
 
 	# Aiming up overrides both the combo and the air swing. It is its own swing:
 	# it neither continues the combo nor counts as a step in it.
-	if Input.is_action_pressed("aim_up"):
+	if _is_aiming(&"aim_up"):
 		if is_on_floor():
 			_start_swing(UP_SWING)
 		elif not _air_attack_used:
@@ -470,6 +474,12 @@ func _handle_jump() -> void:
 	# tick should still be cut down to a minimum-height hop.
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
 		velocity.y *= jump_release_multiplier
+
+
+## An aim only counts once it is pushed past aim_threshold, not merely past the
+## action's deadzone.
+func _is_aiming(action: StringName) -> bool:
+	return Input.get_action_strength(action) >= aim_threshold
 
 
 func _update_facing(input_x: float) -> void:
