@@ -86,6 +86,10 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   it an aimed attack rather than an air attack that happens to point up. It takes no forward
   step, and it is outside the combo: it neither continues one nor counts as a hit in one, so
   the next ground attack starts from the first swing again.
+- One pogo, on `aim_down` plus `attack` in the air. A box just below his feet. A landed hit
+  kicks him upward at about 70 percent of a jump and gives his air attack back, so a Vulture
+  or a hazard can be bounced on repeatedly. A miss does nothing: the pogo costs nothing to
+  try and the swing's own length is what stops it being spammed. Outside the combo.
 - Hit pause: freeze both attacker and target for 0.05 s on a successful hit. This is the single
   biggest contributor to "crunchy" combat; do not skip it.
 - Knockback on hit for enemies (and a small self recoil for Rostam on hitting a boss).
