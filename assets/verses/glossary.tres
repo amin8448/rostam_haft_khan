@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="Glossary" format=3]
+
+[ext_resource type="Script" path="res://scripts/verses/glossary_term.gd" id="1_ytv7m"]
+[ext_resource type="Script" path="res://scripts/verses/glossary.gd" id="2_h4k7x"]
+
+[sub_resource type="Resource" id="Resource_rdnuj"]
+script = ExtResource("1_ytv7m")
+term = "Kayanid"
+note = "Of the Kayanian kings, the dynasty Rostam serves; Kay Kavus is its king during the seven labours."
+
+[sub_resource type="Resource" id="Resource_qmtso"]
+script = ExtResource("1_ytv7m")
+term = "Mazandaran"
+note = "The land of the divs, where Kay Kavus is held captive and where the seven labours lead."
+
+[sub_resource type="Resource" id="Resource_j0y46"]
+script = ExtResource("1_ytv7m")
+term = "gorz"
+note = "Rostam's ox-headed mace, his signature weapon in the Shahnameh."
+
+[sub_resource type="Resource" id="Resource_ly8hf"]
+script = ExtResource("1_ytv7m")
+term = "Rakhsh"
+note = "Rostam's horse, chosen by him as a colt and his companion through every labour; the name means radiant."
+
+[sub_resource type="Resource" id="Resource_3o5a7"]
+script = ExtResource("1_ytv7m")
+term = "Rostam"
+note = "The hero of the Shahnameh's heroic age, son of Zal, champion of the Kayanian kings."
+
+[sub_resource type="Resource" id="Resource_43jcp"]
+script = ExtResource("1_ytv7m")
+term = "Shahnameh"
+note = "Ferdowsi's Book of Kings, completed around 1010, the epic of Iran's myths and history in verse."
+
+[sub_resource type="Resource" id="Resource_krlke"]
+script = ExtResource("1_ytv7m")
+term = "Haft Khan"
+note = "The seven labours: the trials Rostam passes on the road to Mazandaran to free Kay Kavus."
+
+[sub_resource type="Resource" id="Resource_8hhcj"]
+script = ExtResource("1_ytv7m")
+term = "div"
+note = "A demon of the Persian tradition; the divs of Mazandaran are the enemies of the seven labours."
+
+[sub_resource type="Resource" id="Resource_vg5se"]
+script = ExtResource("1_ytv7m")
+term = "babr-e bayan"
+note = "Rostam's tiger-skin coat, his armour in the text. Not yet in the game."
+
+[sub_resource type="Resource" id="Resource_8nbma"]
+script = ExtResource("1_ytv7m")
+term = "Zal"
+note = "Rostam's father, raised by the Simorgh. Not yet in the game."
+
+[sub_resource type="Resource" id="Resource_l0eu7"]
+script = ExtResource("1_ytv7m")
+term = "Simorgh"
+note = "The great bird that raised Zal and aids his line. Not yet in the game."
+
+[resource]
+script = ExtResource("2_h4k7x")
+entries = Array[ExtResource("1_ytv7m")]([SubResource("Resource_rdnuj"), SubResource("Resource_qmtso"), SubResource("Resource_j0y46"), SubResource("Resource_ly8hf"), SubResource("Resource_3o5a7"), SubResource("Resource_43jcp"), SubResource("Resource_krlke"), SubResource("Resource_8hhcj"), SubResource("Resource_vg5se"), SubResource("Resource_8nbma"), SubResource("Resource_l0eu7")])
