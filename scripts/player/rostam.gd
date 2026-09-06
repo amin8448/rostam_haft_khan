@@ -9,12 +9,13 @@ signal died
 enum State { IDLE, RUN, JUMP, FALL, ATTACK, DEAD }
 
 ## Indices 0 to 2 are the ground combo, 3 is the air attack, 4 is the upward
-## swing, 5 is the pogo. One set of arrays rather than four so every swing goes through the
+## swing, 5 is the pogo, 6 is the ground smash. One set of arrays rather than four so every swing goes through the
 ## same code path and every number stays an export.
 const GROUND_SWINGS: int = 3
 const AIR_SWING: int = 3
 const UP_SWING: int = 4
 const POGO_SWING: int = 5
+const SMASH_SWING: int = 6
 
 @export_group("Run")
 @export var run_speed: float = 320.0
@@ -50,34 +51,34 @@ const POGO_SWING: int = 5
 
 @export_group("Attack")
 ## Total length of each swing. The third is longer so it reads as heavier.
-@export var swing_duration: Array[float] = [0.25, 0.25, 0.35, 0.25, 0.25, 0.28]
+@export var swing_duration: Array[float] = [0.25, 0.25, 0.35, 0.25, 0.25, 0.28, 0.87]
 ## Delay before the hitbox opens, so the swing has a wind-up to read.
-@export var swing_windup: Array[float] = [0.08, 0.08, 0.12, 0.08, 0.08, 0.08]
+@export var swing_windup: Array[float] = [0.08, 0.08, 0.12, 0.08, 0.08, 0.08, 0.35]
 ## How long the hitbox stays open. The mace head is visible for exactly
 ## this window, so the timing can be tuned by eye.
-@export var swing_active: Array[float] = [0.08, 0.08, 0.10, 0.08, 0.08, 0.10]
-@export var swing_damage: Array[int] = [1, 1, 1, 1, 1, 1]
+@export var swing_active: Array[float] = [0.08, 0.08, 0.10, 0.08, 0.08, 0.10, 0.12]
+@export var swing_damage: Array[int] = [1, 1, 1, 1, 1, 1, 1]
 ## The third swing hits harder without hitting for more: section 5 asks for more
 ## knockback and a bigger box, not more damage.
-@export var swing_knockback: Array[float] = [180.0, 180.0, 320.0, 180.0, 180.0, 180.0]
+@export var swing_knockback: Array[float] = [180.0, 180.0, 320.0, 180.0, 180.0, 180.0, 420.0]
 ## The air swing is the odd one: bigger, and it sweeps the space above and in
 ## front of Rostam rather than straight ahead, because the things worth hitting
 ## in the air are overhead.
 @export var swing_size: Array[Vector2] = [
 	Vector2(34, 24), Vector2(34, 24), Vector2(46, 32), Vector2(44, 36), Vector2(44, 36),
-	Vector2(44, 36),
+	Vector2(44, 36), Vector2(120, 32),
 ]
 ## Forward step per swing. The two quick swings leave Rostam planted and only
 ## the finisher travels, so the third hit reads as a lunge rather than a third
 ## helping of the same shuffle. A 12 px step on every swing was tried first and
 ## cut. The air attack takes none, to leave the jump arc alone.
-@export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0, 0.0, 0.0]
+@export var swing_step: Array[float] = [0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 0.0]
 ## Effectively the finisher's lunge speed: no other swing steps.
 @export var swing_step_speed: float = 120.0
 ## Gap from Rostam's centre to the near edge of the mace head, per swing. The
 ## air swing's is negative so the box straddles him instead of sitting purely in
 ## front, which is what lets it reach something directly overhead.
-@export var swing_reach: Array[float] = [10.0, 10.0, 10.0, -12.0, -12.0, -22.0]
+@export var swing_reach: Array[float] = [10.0, 10.0, 10.0, -12.0, -12.0, -22.0, -60.0]
 ## Height of the mace box relative to Rostam's centre, positive being lower,
 ## per swing. The ground swings hang low because ground enemies are low: the
 ## Jackal is a 24 px slab and a chest-height swing cleared all but 4 px of it.
@@ -86,13 +87,17 @@ const POGO_SWING: int = 5
 ## The upward swing is raised further than the air swing so the bottom of its
 ## box clears the top of Rostam's head: at -34 the box straddled him, which is
 ## fine for a swing that happens to go up and wrong for one aimed there.
-@export var swing_height: Array[float] = [6.0, 6.0, 6.0, -34.0, -52.0, 44.0]
+@export var swing_height: Array[float] = [6.0, 6.0, 6.0, -34.0, -52.0, 44.0, 24.0]
 ## No further attack input within this long after a swing and the combo drops
 ## back to the first hit.
 @export var combo_reset_time: float = 0.4
 ## The upward kick a landed pogo gives him. About 70 percent of a jump, so
 ## bouncing gains height without being better than jumping.
 @export var pogo_bounce_velocity: float = 448.0
+## Where the gorz is held during the smash's wind-up, relative to Rostam's
+## centre: above his head, so the raise is what tells you it is coming.
+@export var smash_raise_height: float = -58.0
+@export var smash_shake: float = 4.0
 
 @export_group("Health")
 @export var max_health: int = 5
@@ -376,8 +381,10 @@ func _try_start_attack(from_buffer: bool = false) -> void:
 
 	# The pogo costs nothing to try. A miss does nothing special and the swing's
 	# own length is what rate-limits it.
-	if _is_aiming(&"aim_down") and not is_on_floor():
-		_start_swing(POGO_SWING)
+	if _is_aiming(&"aim_down"):
+		# Down means down: a pogo in the air, the smash on the ground. Neither
+		# is a faster route through the combo.
+		_start_swing(POGO_SWING if not is_on_floor() else SMASH_SWING)
 		return
 
 	if is_on_floor():
@@ -399,10 +406,8 @@ func _start_swing(index: int) -> void:
 
 	_mace.damage = _swing_i(swing_damage, index)
 	_mace.knockback_speed = _swing_f(swing_knockback, index)
-	var box: Vector2 = _swing_v2(swing_size, index)
-	_mace.size = box
-	_mace.offset = Vector2(_swing_f(swing_reach, index) + box.x * 0.5,
-			_swing_f(swing_height, index))
+	_mace.size = _swing_v2(swing_size, index)
+	_mace.offset = _swing_offset(index)
 	_mace.deactivate()
 
 
@@ -412,8 +417,19 @@ func _update_swing(delta: float) -> void:
 	var windup: float = _swing_f(swing_windup, _swing_index)
 	var open: bool = _swing_timer >= windup \
 			and _swing_timer < windup + _swing_f(swing_active, _swing_index)
+	# The gorz is raised over his head for the smash's wind-up and comes down as
+	# the box opens. A snap, not a slide: a slide would put the head somewhere
+	# other than the hit at the moment of the hit, which is the opposite of
+	# readable.
+	if _swing_index == SMASH_SWING and not open and _swing_timer < windup:
+		_mace.offset = Vector2(0.0, smash_raise_height)
+		_mace.set_visual_visible(true)
+
 	if open != _mace.is_active():
 		if open:
+			if _swing_index == SMASH_SWING:
+				_mace.offset = _swing_offset(_swing_index)
+				_shake_camera(smash_shake)
 			_mace.activate()
 		else:
 			_mace.deactivate()
@@ -542,6 +558,19 @@ func _update_state(input_x: float) -> void:
 
 func _grounded_state(input_x: float) -> State:
 	return State.RUN if not is_zero_approx(input_x) else State.IDLE
+
+
+## Where the box sits for a swing: reach is the gap to its near edge, so the
+## centre is that plus half its width.
+func _swing_offset(index: int) -> Vector2:
+	var box: Vector2 = _swing_v2(swing_size, index)
+	return Vector2(_swing_f(swing_reach, index) + box.x * 0.5, _swing_f(swing_height, index))
+
+
+func _shake_camera(amount: float) -> void:
+	var camera: Camera2D = get_viewport().get_camera_2d()
+	if camera != null and camera.has_method("shake"):
+		camera.shake(amount)
 
 
 func _swing_f(values: Array[float], index: int) -> float:

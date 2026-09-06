@@ -90,6 +90,12 @@ controller; they are the baseline the headless tests in `tests/` now guard. All 
   kicks him upward at about 70 percent of a jump and gives his air attack back, so a Vulture
   or a hazard can be bounced on repeatedly. A miss does nothing: the pogo costs nothing to
   try and the swing's own length is what stops it being spammed. Outside the combo.
+- One ground smash, on `aim_down` plus `attack` while standing. A long 0.35 s wind-up with
+  the gorz held over his head, then a wide low box that reaches 60 px to either side of him
+  at foot level, 1 damage and heavy knockback outward, a light screen shake, and 0.4 s of
+  recovery in which he can neither move nor attack. It is a commitment that clears space
+  around him, not a quicker way through the combo, and it resets the combo like the other
+  aimed swings.
 - Hit pause: freeze both attacker and target for 0.05 s on a successful hit. This is the single
   biggest contributor to "crunchy" combat; do not skip it.
 - Knockback on hit for enemies (and a small self recoil for Rostam on hitting a boss).

@@ -91,6 +91,13 @@ func is_active() -> bool:
 	return monitoring
 
 
+## Draws the head without arming the box. The gorz is raised over Rostam during
+## the smash's wind-up, which has to be visible before anything can be hit by it.
+func set_visual_visible(shown: bool) -> void:
+	if _visual != null:
+		_visual.visible = shown
+
+
 ## Whatever this box belongs to, for anything that needs the attacker rather
 ## than the attack.
 func get_body() -> Node2D:
