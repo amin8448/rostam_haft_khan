@@ -130,6 +130,18 @@ func hide_boss() -> void:
 		_boss_bar.hide_bar()
 
 
+## The ending's title card. The same screen the far door shows, named by the
+## khan that just finished, with the same restart behind it.
+func show_title_card(title: String, prompt: String) -> void:
+	if _complete == null:
+		return
+	hide_boss()
+	if _complete.has_method("set_text"):
+		_complete.set_text(title, prompt)
+	_complete.show_screen()
+	_busy = false
+
+
 func on_door_entered(door: Door) -> void:
 	if _busy or not door.is_usable():
 		return

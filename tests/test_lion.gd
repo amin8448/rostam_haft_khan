@@ -284,7 +284,11 @@ func _run_sequence() -> void:
 	_failures += 0 if Support.exact("the sequence finishes", _arena.is_finished(), true) else 1
 	_failures += 0 if Support.exact("the Lion ends at zero", _lion.health, 0) else 1
 	_failures += 0 if Support.exact("Rostam survives it", _player.is_dead(), false) else 1
-	_failures += 0 if Support.exact("control comes back", _player.is_pinned(), false) else 1
+	# Control does not come back here any more: the ending slot takes the pin
+	# over and returns it on its title card, which test_ending covers.
+	_failures += 0 if Support.exact("the ending takes over",
+			(_arena.get_ending() as VerseCutscene) != null, true) else 1
+	_failures += 0 if Support.exact("and holds the pin", _player.is_pinned(), true) else 1
 	_failures += 0 if Support.exact("Rakhsh stays in the arena",
 			(_arena.get_node("Rakhsh") as Node2D).visible, true) else 1
 	_failures += 0 if Support.exact("west door unlocked",

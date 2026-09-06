@@ -26,10 +26,16 @@ extends Room
 @export var victory_text: String = "Rakhsh did not wait to be asked."
 @export var settle_time: float = 1.6
 
+@export_group("Ending")
+## The verses. A slot of its own so the animator has one scene to fill and
+## the arena keeps knowing nothing about beats or beyts.
+@export_file("*.tscn") var ending_scene: String = "res://scenes/cutscenes/khan1_ending.tscn"
+
 var _manager: Node
 var _fighting: bool = false
 var _sequence_running: bool = false
 var _finished: bool = false
+var _ending: Node
 
 @onready var _lion: Lion = get_node_or_null(lion_path) as Lion
 @onready var _trigger: Area2D = get_node_or_null(trigger_path) as Area2D
@@ -61,6 +67,11 @@ func is_fighting() -> bool:
 
 func is_finished() -> bool:
 	return _finished
+
+
+## The slot, once it exists, so a test can watch what it plays.
+func get_ending() -> Node:
+	return _ending
 
 
 func _physics_process(_delta: float) -> void:
@@ -143,16 +154,37 @@ func _say_victory() -> void:
 func _finish_fight() -> void:
 	_fighting = false
 	_finished = true
-	var player: Node2D = _find_player()
-	if player != null and player.has_method("set_pinned"):
-		player.set_pinned(false)
-	# Both ways out open again, and the east one is the way on.
+	# Both ways out open again, and the east one is the way on. They open even
+	# though the ending starts here, so a missing slot leaves nothing trapped.
 	if _west_door != null:
 		_west_door.locked = false
 	if _east_door != null:
 		_east_door.locked = false
 	if _manager != null and _manager.has_method("hide_boss"):
 		_manager.hide_boss()
+	_start_ending()
+
+
+## Rostam stays pinned through the handover: the slot takes the pin over and
+## gives control back on its title card, so there is no frame in between where
+## he can walk off during the first beyt.
+func _start_ending() -> void:
+	var scene: PackedScene = load(ending_scene) as PackedScene if not ending_scene.is_empty() else null
+	if scene == null:
+		_release_player()
+		return
+	_ending = scene.instantiate()
+	add_child(_ending)
+	if _ending.has_method("play"):
+		_ending.play(_manager)
+	else:
+		_release_player()
+
+
+func _release_player() -> void:
+	var player: Node2D = _find_player()
+	if player != null and player.has_method("set_pinned"):
+		player.set_pinned(false)
 
 
 func _find_player() -> Node2D:

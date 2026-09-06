@@ -1,0 +1,64 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/cutscenes/verse_cutscene.gd" id="1_cutscene"]
+[ext_resource type="Script" path="res://scripts/cutscenes/cutscene_beat.gd" id="2_beat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/verse_panel.tscn" id="3_panel"]
+
+[sub_resource type="Resource" id="Beat_fight"]
+script = ExtResource("2_beat")
+beat = &"fight"
+hold = 3.0
+
+[sub_resource type="Resource" id="Beat_dawn"]
+script = ExtResource("2_beat")
+beat = &"dawn"
+hold = 2.0
+
+[sub_resource type="Resource" id="Beat_wake"]
+script = ExtResource("2_beat")
+beat = &"wake"
+hold = 3.0
+
+[sub_resource type="Resource" id="Beat_scold"]
+script = ExtResource("2_beat")
+beat = &"scold"
+hold = 3.0
+
+[node name="Khan1Ending" type="Node"]
+script = ExtResource("1_cutscene")
+verses_path = "res://assets/verses/khan1.tres"
+schedule = Array[CutsceneBeat]([SubResource("Beat_fight"), SubResource("Beat_dawn"), SubResource("Beat_wake"), SubResource("Beat_scold")])
+title_text = "Khan 1: The Lion"
+prompt_text = "Press jump to continue"
+
+[node name="Stage" type="CanvasLayer" parent="."]
+layer = 18
+
+[node name="Backdrop" type="ColorRect" parent="Stage"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.03, 0.05, 1)
+
+[node name="Animation" type="Node2D" parent="Stage"]
+position = Vector2(576, 324)
+
+[node name="Caption" type="Label" parent="Stage"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = -52.0
+offset_right = 400.0
+offset_bottom = -24.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.36, 0.35, 0.33, 1)
+theme_override_font_sizes/font_size = 14
+text = "Khan 1 ending cutscene"
+vertical_alignment = 1
+
+[node name="VersePanel" parent="." instance=ExtResource("3_panel")]

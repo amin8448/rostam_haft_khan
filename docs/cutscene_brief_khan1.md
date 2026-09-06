@@ -69,5 +69,8 @@ style the animator chooses will inform the game's style, not the other way round
 
 ## Where it goes
 
-`scenes/cutscenes/khan1_ending.tscn` has an empty node named `Animation`. The delivered
-animation is dropped in there. The beat schedule is an exported array on the same scene.
+`scenes/cutscenes/khan1_ending.tscn` has an empty node named `Animation`, at `Stage/Animation`,
+placed at the centre of a 1152 x 648 screen. The delivered animation is dropped in there; the
+dark `Backdrop` beside it is a placeholder and can be removed once there is something to show.
+The beat schedule is an exported array on the same scene: one entry per beat, each naming a
+beat from the verses file and how long one of its beyts holds.
