@@ -81,6 +81,20 @@ is playable end to end, and prototype it with rectangles before committing to it
 - Khan 4 (the witch) and Khan 6 (Arzhang) are the two labours where Rakhsh has no role, which
   is a good rhythm: two khans where the player is alone before the finale.
 
+## 5. The Journal: lore and bestiary
+
+Hollow Knight's Hunter's Journal is the model. One screen, opened from pause, two tabs:
+
+- **Lore**: people, places, objects and terms from the text (Kayanid, Mazandaran, the gorz,
+  babr-e bayan, Zal, the Simorgh), each with a short plain note. Entries unlock when the
+  term first appears in a verse or on screen.
+- **Bestiary**: each enemy, unlocked on first encounter, with a line about how it behaves
+  and, where Ferdowsi gives one, his line about it. Kill counts are optional.
+
+The data lives in `docs/glossary.md` (already started) and a per-enemy note on each enemy
+scene. Session 7 uses the glossary for one-line notes under the verses; the Journal screen
+itself is a later session. Nothing in it is needed for the Khan 1 slice.
+
 ## Keep extensible during the Khan 1 slice
 
 These are the only concrete obligations this file places on sessions 4 and 5:
